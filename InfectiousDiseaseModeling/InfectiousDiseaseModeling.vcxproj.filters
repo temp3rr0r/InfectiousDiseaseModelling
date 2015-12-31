@@ -21,5 +21,16 @@
     <ClCompile Include="InfectiousDiseaseModeling.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="Individual.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="Individual.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="IndividualParameters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
