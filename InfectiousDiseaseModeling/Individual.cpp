@@ -1,6 +1,7 @@
 #include <iostream>
-#include "Individual.h"
 #include <random>
+#include <string>
+#include "Individual.h"
 
 void Individual::infect() {
 	infected_ = true;
@@ -14,12 +15,25 @@ void Individual::heal() {
 	}
 }
 
-void Individual::epoch() {
+void Individual::advance_epoch() {
 	if (infected_) {
 		if (epochs_infected_ >= parameters_.DiseaseDuration)
 			heal();
 		else
 			++epochs_infected_;
+	}
+}
+
+// Check if an individual gets infected by a predefined chance
+void Individual::try_infect() {
+	
+	if (!infected_) {
+		std::random_device random_device;
+		std::mt19937 mersenne_twister_engine(random_device());
+		std::uniform_real_distribution<> real_random(0, 1);
+
+		if (real_random(mersenne_twister_engine) < parameters_.Infectiosity)
+			infect();
 	}
 }
 
@@ -38,10 +52,14 @@ void Individual::set_location(size_t location) {
 	location_ = location;
 }
 
-std::string Individual::get_string() const {
-	std::string returning_string = "Individual at ";
+size_t Individual::get_location() const {
+	return location_;
+}
 
-	returning_string.append("Location"); // TODO: change
+std::string Individual::get_string() const {
+	std::string returning_string = "Individual at location: ";
+
+	returning_string.append(std::to_string(location_));
 
 	if (infected_)
 		returning_string.append(" infected");
@@ -55,4 +73,11 @@ std::string Individual::get_string() const {
 		returning_string.append(" hit");
 
 	return returning_string;
+}
+
+bool Individual::is_infected() const {
+	return infected_;
+}
+bool Individual::is_hit() const {
+	return hit_;
 }

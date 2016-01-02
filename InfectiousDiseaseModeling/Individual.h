@@ -13,11 +13,14 @@ public:
 
 	void infect();
 	void heal();
-	void epoch();
+	void advance_epoch();
+	void try_infect();
 	void move(std::vector<size_t>& new_locations);
 	void set_location(size_t location);
+	size_t get_location() const;
 	std::string get_string() const;
-
+	bool is_infected() const;
+	bool is_hit() const;
 private:
 	bool infected_;
 	bool hit_; // Indicates if individual was infected as some point

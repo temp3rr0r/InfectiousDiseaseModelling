@@ -150,10 +150,13 @@
   <ItemGroup>
     <ClCompile Include="Individual.cpp" />
     <ClCompile Include="InfectiousDiseaseModeling.cpp" />
+    <ClCompile Include="NeighborhoodAllocator.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Default.h" />
     <ClInclude Include="Individual.h" />
     <ClInclude Include="IndividualParameters.h" />
+    <ClInclude Include="NeighborhoodAllocator.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
