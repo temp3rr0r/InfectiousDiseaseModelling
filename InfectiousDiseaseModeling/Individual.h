@@ -18,16 +18,16 @@ public:
 	void move(std::vector<size_t>& new_locations);
 	void set_location(size_t location);
 	size_t get_location() const;
-	std::string get_string() const;
 	bool is_infected() const;
 	bool is_hit() const;
+	std::string get_string() const;
 private:
 	bool infected_;
 	bool hit_; // Indicates if individual was infected as some point
 	bool recovered_;
 	uint8_t epochs_infected_;
-	IndividualParameters parameters_;
 	size_t location_; // Refers to the graph node that represents the current location of the individual
+	IndividualParameters parameters_;
 };
 
 std::ostream& operator<<(const std::ostream& lhs, const std::string& cs);

@@ -5,7 +5,7 @@
 using namespace std;
 using namespace boost;
 
-std::map<size_t, std::vector<size_t>> NeighborhoodAllocator::get_node_neighborhood_lookup_map(IndividualUndirectedGraph invidual_graph) {
+std::map<size_t, std::vector<size_t>> NeighborhoodAllocator::get_node_neighborhood_lookup_map(const IndividualUndirectedGraph& invidual_graph) {
 	
 	std::map<size_t, std::vector<size_t>> neighborhood_lookup_map;
 
@@ -34,10 +34,10 @@ std::vector<Individual> NeighborhoodAllocator::get_random_individuals(size_t ind
 	// Randomly assign locations to individuals in the population	
 	std::random_device random_device;
 	std::mt19937 mersenne_twister_engine(random_device());
-	uniform_int_distribution<> uniform_int_distribution(0, location_count);
+	uniform_int_distribution<> uniform_int_distribution(0, static_cast<int>(location_count));
 
-	for (Individual current_individual : individuals) {
-		current_individual.set_location(uniform_int_distribution(mersenne_twister_engine)); // Assign the random location
+	for (Individual& current_individual : individuals) {
+		current_individual.set_location(static_cast<size_t>(uniform_int_distribution(mersenne_twister_engine))); // Assign the random location
 	}
 	return individuals;
 }

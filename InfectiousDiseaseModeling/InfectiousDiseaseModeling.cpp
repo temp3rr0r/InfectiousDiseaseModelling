@@ -9,55 +9,47 @@
 using namespace std;
 using namespace boost;
 
-void simulate(bool generate) {
+void simulate(size_t individual_count, size_t location_count, size_t total_epochs) {
 
-	const size_t N = 400;
-	const size_t max_vertices = 10;
-	const size_t simulation_days = 60;
-	IndividualUndirectedGraph individual_graph;
-
-	//	Read or generate a graph of locations & their connections
-	if (generate)
-		individual_graph = NeighborhoodAllocator::get_sample_individual_undirected_graph();
+	//Generate a graph of location nodes & connections
+	IndividualUndirectedGraph individual_graph = NeighborhoodAllocator::get_sample_individual_undirected_graph(); // TODO: check location count
 
 	// Generate a population of healthy individuals
-	vector<Individual> individuals = NeighborhoodAllocator::get_random_individuals(max_vertices, N);
+	vector<Individual> individuals = NeighborhoodAllocator::get_random_individuals(individual_count, location_count);
 	
 	// Infect a small, random sample of the population
 	individuals[0].infect(); // Infect one individual
 
-	// Statistics vector, index is advance_epoch
+	// Statistics vector, index is epoch
 	vector<std::tuple<size_t, size_t>> epoch_statistics;
 	
-	// Generate map with the neighborhoods for each graph node
+	// Generate a look up map with the neighbouring nodes for each graph node
 	map<size_t, vector<size_t>> neighborhood_lookup_map = NeighborhoodAllocator::get_node_neighborhood_lookup_map(individual_graph);
 
-	// Repeat for the number of epochs :
-	for (size_t current_epoch = 0; current_epoch < (simulation_days + 1); ++current_epoch) {
+	// Repeat for all the epochs
+	for (size_t current_epoch = 0; current_epoch < (total_epochs + 1); ++current_epoch) {
 		
 		//	Randomly move all individuals
 		for (Individual current_individual : individuals)
-			current_individual.move(neighborhood_lookup_map[current_individual.get_location()]); // Stay in the same spot or move to a node neighborhood
+			current_individual.move(neighborhood_lookup_map[current_individual.get_location()]); // Stay in the same spot or move to a neighbouring node
 		
-		// For each location handle the interactions between all individuals at that location			
+		// foreach each individual		
 		for (size_t individual_index = 0; individual_index != individuals.size(); ++individual_index) {			
-			// When an individual that is infected
-			if (individuals[individual_index].is_infected()) {
+			
+			if (individuals[individual_index].is_infected()) { // if the individual is infected
 
-				// Meets another individual that is susceptible the disease
+				// and meets another individual that is susceptible the disease
 				for (size_t affecting_individual = 0; affecting_individual != individuals.size(); ++affecting_individual) {
 					if (individual_index != affecting_individual) {
 
-						// Check if the susceptible gets infected
-						if (individuals[individual_index].get_location() == individuals[affecting_individual].get_location())
+						// Check if the susceptible individual gets infected
+						if (individuals[individual_index].get_location() == individuals[affecting_individual].get_location()) // in the same location
 							individuals[affecting_individual].try_infect();						
 					}
 				}
 			}
 		}
-
-
-		//	All individuals that share the same location meet each other.
+		
 		size_t hit_count = 0;
 		size_t infected_count = 0;
 		for (Individual current_individual : individuals) {
@@ -77,20 +69,12 @@ void simulate(bool generate) {
 int main() {	
 	omp_set_num_threads(4);
 
-	// bool do_use_parallel = false;
-	//#pragma omp parallel if(do_use_parallel)
 	#pragma omp parallel
 	{
 		#pragma omp critical
 		cout << "Hello from " << omp_get_thread_num() << " thread." << endl;
-	}
-	
-	//boost_test_lambda();
-	//traversing_undirected_graph_bgl();
-	//dfs_with_bgl();
-
-	simulate(true);
-
+	}	
+	simulate(400, 10, 60); // 400 individuals, 10 locations, 60 epochs
 	system("pause");	
 }
 

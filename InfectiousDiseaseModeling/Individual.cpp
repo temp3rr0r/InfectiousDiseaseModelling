@@ -32,7 +32,7 @@ void Individual::try_infect() {
 		std::mt19937 mersenne_twister_engine(random_device());
 		std::uniform_real_distribution<> real_random(0, 1);
 
-		if (real_random(mersenne_twister_engine) < parameters_.Infectiosity)
+		if (static_cast<float>(real_random(mersenne_twister_engine)) < parameters_.Infectiosity)
 			infect();
 	}
 }
@@ -43,7 +43,7 @@ void Individual::move(std::vector<size_t>& new_locations) {
 
 	std::random_device random_device;
 	std::mt19937 mersenne_twister_engine(random_device());
-	std::uniform_int_distribution<> uniform_int_distribution(0, new_locations.size());
+	std::uniform_int_distribution<> uniform_int_distribution(0, static_cast<int>(new_locations.size()));
 
 	location_ = new_locations[uniform_int_distribution(mersenne_twister_engine)]; // Assign the random location
 }
