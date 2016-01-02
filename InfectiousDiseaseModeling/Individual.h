@@ -1,5 +1,6 @@
 #pragma once
 #include <cstdint>
+#include <vector>
 #include "IndividualParameters.h"
 
 class Individual {

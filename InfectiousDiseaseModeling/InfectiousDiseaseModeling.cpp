@@ -79,6 +79,8 @@ int main() {
 
 	simulate_serial(400, 10, 60); // 400 individuals, 10 locations, 60 epochs
 
+	NeighborhoodAllocator::get_location_undirected_graph_from_file("antwerp.edges");
+
 	system("pause");	
 }
 

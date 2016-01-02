@@ -1,6 +1,9 @@
 #include <random>
 #include "Default.h"
 #include "NeighborhoodAllocator.h"
+#include <iostream>
+#include <boost/tokenizer.hpp>
+#include <fstream>
 
 std::map<size_t, std::vector<size_t>> NeighborhoodAllocator::get_node_neighborhood_lookup_map(const LocationUndirectedGraph& location_graph) {
 	
@@ -39,6 +42,53 @@ std::vector<Individual> NeighborhoodAllocator::get_random_individuals(size_t ind
 		current_individual.set_location(static_cast<size_t>(uniform_int_distribution(mersenne_twister_engine))); // Assign the random location
 	}
 	return individuals;
+}
+
+LocationUndirectedGraph NeighborhoodAllocator::get_location_undirected_graph_from_file(std::string filename) {
+
+	using namespace std;
+	using namespace boost;
+
+	LocationUndirectedGraph location_graph;
+		
+	ifstream input_file_stream(filename);
+	
+	if (!input_file_stream.is_open())
+		return 1;
+
+	typedef tokenizer<escaped_list_separator<char>> Tokenizer;
+
+	vector<string> string_vector;
+	string current_line;
+
+	map<size_t, uint32_t> map_location_to_index;
+	uint32_t current_index = 0;
+
+	while (getline(input_file_stream, current_line)) {
+		Tokenizer tok(current_line);
+		string_vector.assign(tok.begin(), tok.end());
+
+		size_t first_edge = stoull(string_vector[0]);
+		size_t second_edge = stoull(string_vector[1]);
+
+		if (map_location_to_index.find(first_edge) == map_location_to_index.end()) {
+			// not found
+			map_location_to_index[first_edge] = current_index;
+			current_index++;
+		}
+
+		if (map_location_to_index.find(second_edge) == map_location_to_index.end()) {
+			// not found
+			map_location_to_index[second_edge] = current_index;
+			current_index++;
+		}
+
+		add_edge(map_location_to_index[first_edge], map_location_to_index[second_edge], location_graph);
+	}
+
+	input_file_stream.close();
+
+	return location_graph;
 }
 
 LocationUndirectedGraph NeighborhoodAllocator::get_sample_location_undirected_graph() {
