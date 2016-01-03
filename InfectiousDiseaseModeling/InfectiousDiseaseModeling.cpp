@@ -24,6 +24,7 @@ void simulate_parallel(size_t individual_count, size_t total_epochs, const Locat
 		static int chunk = static_cast<int>(max_index / 10);
 
 		//	Randomly move all individuals
+
 		#pragma omp parallel private(index) shared(individuals, neighborhood_lookup_map, chunk)
 		{
 			#pragma omp for schedule(dynamic, chunk) nowait
