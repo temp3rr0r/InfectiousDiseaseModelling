@@ -1,18 +1,17 @@
 #include <omp.h>
 #include <iostream>
 #include "Individual.h"
-#include "NeighborhoodAllocator.h"
+#include "GraphHandler.h"
 
 using namespace std;
 using namespace boost;
 
-void simulate_serial(size_t individual_count, size_t location_count, size_t total_epochs) {
+void simulate_serial(size_t individual_count, size_t total_epochs, LocationUndirectedGraph individual_graph) {
 
-	//Generate a graph of location nodes & connections
-	LocationUndirectedGraph individual_graph = NeighborhoodAllocator::get_sample_location_undirected_graph(); // TODO: check location count
+	size_t location_count = individual_graph.m_vertices.size();
 
 	// Generate a population of healthy individuals
-	vector<Individual> individuals = NeighborhoodAllocator::get_random_individuals(individual_count, location_count);
+	vector<Individual> individuals = GraphHandler::get_random_individuals(individual_count, location_count);
 	
 	// Infect a small, random sample of the population
 	individuals[0].infect(); // Infect one individual
@@ -21,7 +20,7 @@ void simulate_serial(size_t individual_count, size_t location_count, size_t tota
 	vector<std::tuple<size_t, size_t>> epoch_statistics;
 	
 	// Generate a look up map with the neighbouring nodes for each graph node
-	map<size_t, vector<size_t>> neighborhood_lookup_map = NeighborhoodAllocator::get_node_neighborhood_lookup_map(individual_graph);
+	map<size_t, vector<size_t>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
 
 	// Repeat for all the epochs
 	for (size_t current_epoch = 0; current_epoch < (total_epochs + 1); ++current_epoch) {
@@ -61,11 +60,13 @@ void simulate_serial(size_t individual_count, size_t location_count, size_t tota
 		}
 		epoch_statistics.push_back(std::make_tuple(hit_count, infected_count));
 	}
-
-	cout << "Total epochs: " << epoch_statistics.size() << " Individual count: " << individuals.size() << endl;
-	for (size_t epoch_index = 0; epoch_index != (total_epochs + 1); ++epoch_index) {
-		cout << " Hit[" << epoch_index << "]: " << get<0>(epoch_statistics[epoch_index]) << " Infected[" << epoch_index << "]: " << get<1>(epoch_statistics[epoch_index]) << endl;
-	}
+	
+	if (SAVE_CSV)
+		GraphHandler::save_epoch_statistics_to_csv("output.csv", epoch_statistics);
+	if (SAVE_GRAPHVIZ)
+		GraphHandler::save_undirected_graph_to_graphviz_file("individualGraph.dot", individual_graph);
+	if (SHOW_EPIDEMIC_RESULTS)
+		GraphHandler::show_epidemic_results(individual_count, epoch_statistics);
 }
 
 int main() {	
@@ -77,9 +78,15 @@ int main() {
 		cout << "Hello from " << omp_get_thread_num() << " thread." << endl;
 	}	
 
-	simulate_serial(400, 10, 60); // 400 individuals, 10 locations, 60 epochs
+	LocationUndirectedGraph individual_graph;
+	//Generate a graph of location nodes & connections
 
-	NeighborhoodAllocator::get_location_undirected_graph_from_file("antwerp.edges");
+	individual_graph = GraphHandler::get_sample_location_undirected_graph();
+	simulate_serial(400, 60, individual_graph); // Sample has 10 locations. We want 400 individuals, 60 epochs
+
+	//individual_graph = GraphHandler::get_location_undirected_graph_from_file("antwerp.edges");
+	//individual_graph = GraphHandler::get_location_undirected_graph_from_file("minimumantwerp.edges");
+	//simulate_serial(4000, 60, individual_graph); //400 individuals, 60 epochs
 
 	system("pause");	
 }

@@ -3,6 +3,7 @@
 #include <vector>
 #include "IndividualParameters.h"
 
+// Individual represents one person that can be infected, healed, infect others and move to other graph node locations
 class Individual {
 public:		
 	Individual() : infected_(false), hit_(false), recovered_(), epochs_infected_(0), location_(0) { } // Default constructor

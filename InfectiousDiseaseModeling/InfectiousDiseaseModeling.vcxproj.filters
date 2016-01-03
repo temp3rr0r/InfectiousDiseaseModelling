@@ -24,7 +24,7 @@
     <ClCompile Include="Individual.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="NeighborhoodAllocator.cpp">
+    <ClCompile Include="GraphHandler.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -35,10 +35,10 @@
     <ClInclude Include="IndividualParameters.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="NeighborhoodAllocator.h">
+    <ClInclude Include="Default.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Default.h">
+    <ClInclude Include="GraphHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

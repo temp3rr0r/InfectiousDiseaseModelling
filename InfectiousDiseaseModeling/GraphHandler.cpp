@@ -1,11 +1,12 @@
 #include <random>
-#include "Default.h"
-#include "NeighborhoodAllocator.h"
-#include <iostream>
-#include <boost/tokenizer.hpp>
 #include <fstream>
+#include <boost/tokenizer.hpp>
+#include <boost/graph/graphviz.hpp>
+#include "Default.h"
+#include "GraphHandler.h"
 
-std::map<size_t, std::vector<size_t>> NeighborhoodAllocator::get_node_neighborhood_lookup_map(const LocationUndirectedGraph& location_graph) {
+// Scan the location graph and return a map that binds every location with a vector of neighbouring locations
+std::map<size_t, std::vector<size_t>> GraphHandler::get_node_neighborhood_lookup_map(const LocationUndirectedGraph& location_graph) {
 	
 	std::map<size_t, std::vector<size_t>> returning_neighborhood_lookup_map;
 
@@ -28,7 +29,8 @@ std::map<size_t, std::vector<size_t>> NeighborhoodAllocator::get_node_neighborho
 
 // TODO: return "location size_t" vector from graph vertices (by tie of the graph iterators). Must be a distinct list
 
-std::vector<Individual> NeighborhoodAllocator::get_random_individuals(size_t individual_count, size_t location_count) {
+// Generate a vector of individuals and assign a random location within the requested ranges
+std::vector<Individual> GraphHandler::get_random_individuals(size_t individual_count, size_t location_count) {
 
 	// Generate a population of healthy individuals
 	std::vector<Individual> individuals(individual_count, Individual());
@@ -44,7 +46,8 @@ std::vector<Individual> NeighborhoodAllocator::get_random_individuals(size_t ind
 	return individuals;
 }
 
-LocationUndirectedGraph NeighborhoodAllocator::get_location_undirected_graph_from_file(std::string filename) {
+// Read the openstream map edges file and generate a Undirected graph of locations
+LocationUndirectedGraph GraphHandler::get_location_undirected_graph_from_file(std::string filename) {
 
 	using namespace std;
 	using namespace boost;
@@ -91,7 +94,8 @@ LocationUndirectedGraph NeighborhoodAllocator::get_location_undirected_graph_fro
 	return location_graph;
 }
 
-LocationUndirectedGraph NeighborhoodAllocator::get_sample_location_undirected_graph() {
+// Generate a sample location undirected graph, similar to the one given in the python toy example
+LocationUndirectedGraph GraphHandler::get_sample_location_undirected_graph() {
 
 	LocationUndirectedGraph location_graph;
 	enum { a, b, c, d, e, f, g, h, i, j, k };
@@ -117,4 +121,58 @@ LocationUndirectedGraph NeighborhoodAllocator::get_sample_location_undirected_gr
 	add_edge(j, k, location_graph);
 
 	return location_graph;
+}
+
+// Save an Undirected location graph into a graphiz dot file, to disk
+void GraphHandler::save_undirected_graph_to_graphviz_file(std::string filename, const LocationUndirectedGraph& location_graph) {
+
+	std::vector<std::string> NameVec(location_graph.m_vertices.size(), "L"); // for dot file 
+
+
+	std::ofstream dotfile(filename.c_str());
+	boost::write_graphviz(dotfile, location_graph,
+		boost::make_label_writer(&NameVec[0]) // TODO: bind id with the map lookup size_t to string
+		);
+
+	dotfile.close();
+}
+
+// Save the hit and infected counts for each epoch into a csv file, to disk
+void GraphHandler::save_epoch_statistics_to_csv(std::string filename, const std::vector<std::tuple<size_t, size_t>> epoch_statistics){
+
+	std::ofstream output_csv;
+	output_csv.open(std::string(filename));
+
+	// Write columns
+	output_csv << "epoch,hitcount,infectedcount" << std::endl;
+	
+	// Write a line for each epoch
+	for (size_t epoch_index = 0; epoch_index != epoch_statistics.size(); ++epoch_index)
+		output_csv << epoch_index << "," << get<0>(epoch_statistics[epoch_index]) << "," << get<1>(epoch_statistics[epoch_index]) << std::endl;
+
+	output_csv.close();
+}
+
+// Show the Hit percentage (fraction of the total population that got infected), epidemic peak percentage and the epoch of the epidemic peak
+void GraphHandler::show_epidemic_results(size_t population_count, const std::vector<std::tuple<size_t, size_t>> epoch_statistics) {
+	
+	// Fraction of the population that got infected
+	size_t hit_count = get<0>(epoch_statistics[epoch_statistics.size() - 1]);
+
+	// Epidemic peak %
+	size_t epidemic_peak_size = 0;
+	size_t epidemic_peak_epoch = 0;
+
+	// Write a line for each epoch
+	for (size_t epoch_index = 0; epoch_index != epoch_statistics.size(); ++epoch_index) {
+		if (get<1>(epoch_statistics[epoch_index]) > epidemic_peak_size) {
+			epidemic_peak_size = get<1>(epoch_statistics[epoch_index]);
+			epidemic_peak_epoch = epoch_index;
+		}
+	}
+
+	std::cout << "-- Epidemic Results --" << std::endl;
+	std::cout << "Hit: " << static_cast<float>(hit_count) / static_cast<float>(population_count) << " %"<< std::endl;
+	std::cout << "Epidemic Peak:" << static_cast<float>(epidemic_peak_size) / static_cast<float>(population_count) << " %" << std::endl;
+	std::cout << "Epidemic Peak Epoch: " << epidemic_peak_epoch << std::endl;
 }

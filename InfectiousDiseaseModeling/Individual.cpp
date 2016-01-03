@@ -1,11 +1,13 @@
 #include <random>
 #include "Individual.h"
 
+// Infect the individual
 void Individual::infect() {
 	infected_ = true;
 	hit_ = true;
 }
 
+// Recover the individual
 void Individual::recover() {
 	if(infected_) {
 		infected_ = false;
@@ -48,17 +50,22 @@ void Individual::move(std::vector<size_t>& node_neighbours) {
 	location_ = node_neighbours[uniform_int_distribution(mersenne_twister_engine)]; // Assign the random location
 }
 
+// Set the location
 void Individual::set_location(size_t location) {
 	location_ = location;
 }
 
+// Get the location
 size_t Individual::get_location() const {
 	return location_;
 }
 
+// Check if individual is currently infected
 bool Individual::is_infected() const {
 	return infected_;
 }
+
+// Check if individual was infected in the past
 bool Individual::is_hit() const {
 	return hit_;
 }
