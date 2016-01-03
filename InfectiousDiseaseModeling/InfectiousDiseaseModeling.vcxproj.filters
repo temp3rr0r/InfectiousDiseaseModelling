@@ -35,10 +35,10 @@
     <ClInclude Include="IndividualParameters.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Default.h">
+    <ClInclude Include="GraphHandler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="GraphHandler.h">
+    <ClInclude Include="Settings.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>

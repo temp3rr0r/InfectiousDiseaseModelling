@@ -2,7 +2,7 @@
 #include <fstream>
 #include <boost/tokenizer.hpp>
 #include <boost/graph/graphviz.hpp>
-#include "Default.h"
+#include "Settings.h"
 #include "GraphHandler.h"
 
 // Scan the location graph and return a map that binds every location with a vector of neighbouring locations
@@ -171,7 +171,7 @@ void GraphHandler::show_epidemic_results(size_t population_count, const std::vec
 		}
 	}
 
-	std::cout << "-- Epidemic Results --" << std::endl;
+	std::cout << std::endl << "-- Epidemic Results --" << std::endl;
 	std::cout << "Hit: " << static_cast<float>(hit_count) / static_cast<float>(population_count) << " %"<< std::endl;
 	std::cout << "Epidemic Peak:" << static_cast<float>(epidemic_peak_size) / static_cast<float>(population_count) << " %" << std::endl;
 	std::cout << "Epidemic Peak Epoch: " << epidemic_peak_epoch << std::endl;

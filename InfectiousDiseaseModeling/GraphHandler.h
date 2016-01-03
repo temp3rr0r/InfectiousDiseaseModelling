@@ -1,7 +1,7 @@
 #pragma once
 #include <map>
 #include <vector>
-#include "Default.h"
+#include "Settings.h"
 #include "Individual.h"
 
 // GraphHandler contains only static methods that: Show the epidemic results, save statics to csv, save location graphs to graphviz dot files,

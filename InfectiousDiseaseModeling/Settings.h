@@ -9,4 +9,9 @@ typedef boost::adjacency_list<boost::listS, boost::vecS, boost::undirectedS> Loc
 
 static const bool SAVE_CSV = true;
 static const bool SAVE_GRAPHVIZ = true;
-static const bool SHOW_EPIDEMIC_RESULTS = true;
+static const bool SHOW_EPIDEMIC_RESULTS = false;
+
+static const int DEFAULT_NUMBER_OF_THREADS = 4;
+
+static const size_t DEFAULT_TOTAL_EPOCHS = 60;
+static const size_t DEFAULT_INDIVIDUAL_COUNT = 400;

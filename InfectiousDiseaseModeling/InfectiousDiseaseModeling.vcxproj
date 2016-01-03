@@ -153,7 +153,7 @@
     <ClCompile Include="GraphHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Default.h" />
+    <ClInclude Include="Settings.h" />
     <ClInclude Include="Individual.h" />
     <ClInclude Include="IndividualParameters.h" />
     <ClInclude Include="GraphHandler.h" />
