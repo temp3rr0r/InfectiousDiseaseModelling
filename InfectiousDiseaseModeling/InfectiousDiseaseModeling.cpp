@@ -42,27 +42,102 @@ void simulate_parallel(size_t individual_count, size_t total_epochs, const Locat
 		// foreach each individual
 		#pragma omp parallel private(index) shared(individuals) firstprivate(chunk, max_index)
 		{
+			// Default method
+//			#pragma omp for schedule(static,chunk) nowait
+//			for (index = 0; index < max_index; ++index) {
+//				Individual current_individual = individuals[index]; // Thread local variable
+//
+//				if (current_individual.is_infected()) { // if the individual is infected
+//
+//					// and meets another individual that is susceptible to the disease
+//					int affecting_index;
+//					for (affecting_index = 0; affecting_index < individual_count; ++affecting_index) {
+//						if (index != affecting_index) {
+//							Individual affecting_individual = individuals[affecting_index]; // Thread local variable
+//							// Check if the susceptible individual gets infected
+//							if (current_individual.get_location() == affecting_individual.get_location() && !affecting_individual.is_infected()) { // in the same location
+//								affecting_individual.try_infect();
+//								if (affecting_individual.is_infected()) {
+//									#pragma omp critical
+//									individuals[affecting_index] = affecting_individual; // Save affecting individual back to the shared memory space
+//								}
+//							}
+//						}
+//					}
+//				}
+//			}
+
+			// Inner loop parallelism
+//			for (index = 0; index < individual_count; ++index) {
+//
+//				if (individuals[index].is_infected()) { // if the individual is infected
+//
+//					//Individual current_individual = individuals[index]; // Thread local variable
+//					// and meets another individual that is susceptible to the disease
+//					int affecting_index;
+//					#pragma omp parallel private(affecting_index) shared(individuals) firstprivate(chunk, max_index)
+//					{
+//						#pragma omp for schedule(static,chunk) nowait
+//						for (affecting_index = 0; affecting_index < max_index; ++affecting_index) {
+//							if (index != affecting_index) {
+//								//Individual affecting_individual = individuals[affecting_index]; // Thread local variable
+//								// Check if the susceptible individual gets infected
+//								if (individuals[index].get_location() == individuals[affecting_index].get_location()) { // in the same location
+//									individuals[affecting_index].try_infect();
+////									affecting_individual.try_infect();
+////									if (affecting_individual.is_infected()) {
+////										//#pragma omp critical
+////										individuals[affecting_index] = affecting_individual; // Save affecting individual back to the shared memory space
+////									}
+//								}
+//							}
+//						}
+//					}
+//				}
+//			}
+			
+//			// Try pairwise infection + modifying the internal loop range. This REMOVES the need to have a critical section, as long as there is "task stealing"
+//			#pragma omp for schedule(static,chunk) nowait
+//			for (index = 0; index < max_index; ++index) {
+//				Individual current_individual = individuals[index]; // Thread local variable
+//				int affecting_index;
+//				for (affecting_index = index + 1; affecting_index < individual_count; ++affecting_index) {
+//					Individual affecting_individual = individuals[affecting_index]; // Thread local variable
+//					if (current_individual.get_location() == affecting_individual.get_location()) {
+//						if (current_individual.is_infected()) {
+//							affecting_individual.try_infect();
+//							individuals[affecting_index] = affecting_individual; // Save affecting individual back to the shared memory space
+//						}
+//						if (affecting_individual.is_infected()) {
+//							current_individual.try_infect();
+//							individuals[index] = current_individual; // Save affecting individual back to the shared memory space
+//						}
+//					}
+//				}
+//			}
+
+			// 3rd method, only change the chunk's individuals, to avoid critical region
 			#pragma omp for schedule(static,chunk) nowait
 			for (index = 0; index < max_index; ++index) {
 				Individual current_individual = individuals[index]; // Thread local variable
 
-				if (current_individual.is_infected()) { // if the individual is infected
-
-					// and meets another individual that is susceptible to the disease
+				if (!current_individual.is_infected()) {
 					int affecting_index;
-					for (affecting_index = 0; affecting_index < max_index; ++affecting_index) {
+					for (affecting_index = 0; affecting_index < individual_count; ++affecting_index) {
+						Individual affecting_individual = individuals[affecting_index]; // Thread local variable
 
-						if (index != affecting_index) {
-							Individual affecting_individual = individuals[affecting_index]; // Thread local variable
-							// Check if the susceptible individual gets infected
-							if (current_individual.get_location() == affecting_individual.get_location()) { // in the same location
-								affecting_individual.try_infect();
-								individuals[affecting_index] = affecting_individual; // Save affecting individual back to the shared memory space
+						if (affecting_individual.is_infected()) {
+							if (current_individual.get_location() == affecting_individual.get_location()) {
+								current_individual.try_infect();
+								if (current_individual.is_infected()) {
+									individuals[index] = current_individual; // Save affecting individual back to the shared memory space
+								}
 							}
 						}
 					}
 				}
 			}
+
 		} // Implicit Barrier
 
 		//	Randomly move all individuals
@@ -77,8 +152,10 @@ void simulate_parallel(size_t individual_count, size_t total_epochs, const Locat
 				current_individual.advance_epoch();
 				// Gather statistics about the current advance_epoch : what is the fraction of infected and hit individual
 				if (current_individual.is_infected())
+					#pragma omp atomic
 					++infected_count;
 				if (current_individual.is_hit())
+					#pragma omp atomic
 					++hit_count;
 				individuals[index] = current_individual; // Save individual back to the shared memory space
 			}
@@ -171,6 +248,7 @@ int main() {
 	//total_epochs *= 5;
 	thread_count = 4;
 	//repeat_count *= 4;
+	//repeat_count = 1;
 
 	// Set the thread count
 	omp_set_num_threads(thread_count);
