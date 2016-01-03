@@ -4,8 +4,7 @@
 // Default settings and some custom type definitions
 
 // S means selector
-// TODO: check performance listS vs vecS
-typedef boost::adjacency_list<boost::listS, boost::vecS, boost::undirectedS> LocationUndirectedGraph;
+typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> LocationUndirectedGraph;
 
 static const bool SAVE_CSV = false;
 static const bool SAVE_GRAPHVIZ = false;

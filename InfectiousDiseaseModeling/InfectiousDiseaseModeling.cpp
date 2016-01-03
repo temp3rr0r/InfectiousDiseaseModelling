@@ -167,7 +167,7 @@ int main() {
 	int repeat_count = DEFAULT_REPEAT_COUNT;
 	string input_graph_filename = "antwerp.edges";
 
-	individual_count *= 15;
+	individual_count *= 10;
 	//total_epochs *= 5;
 	thread_count = 4;
 	//repeat_count *= 4;
