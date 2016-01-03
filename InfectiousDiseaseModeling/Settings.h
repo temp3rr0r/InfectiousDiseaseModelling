@@ -7,8 +7,8 @@
 // TODO: check performance listS vs vecS
 typedef boost::adjacency_list<boost::listS, boost::vecS, boost::undirectedS> LocationUndirectedGraph;
 
-static const bool SAVE_CSV = true;
-static const bool SAVE_GRAPHVIZ = true;
+static const bool SAVE_CSV = false;
+static const bool SAVE_GRAPHVIZ = false;
 static const bool SHOW_EPIDEMIC_RESULTS = false;
 
 static const int DEFAULT_NUMBER_OF_THREADS = 4;
