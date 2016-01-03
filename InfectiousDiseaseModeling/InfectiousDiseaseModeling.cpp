@@ -150,9 +150,10 @@ void simulate_serial(size_t individual_count, size_t total_epochs, const Locatio
 		GraphHandler::show_epidemic_results(individual_count, epoch_statistics);
 }
 
-void reset_input(string filename, size_t individual_count, size_t& location_count, LocationUndirectedGraph& individual_graph, vector<Individual>& individuals) {
+void reset_input(string filename, size_t individual_count, size_t& location_count, size_t& edge_count, LocationUndirectedGraph& individual_graph, vector<Individual>& individuals) {
 	individual_graph = GraphHandler::get_location_undirected_graph_from_file(filename);
 	location_count = individual_graph.m_vertices.size();
+	edge_count = individual_graph.m_edges.size();
 	individuals = GraphHandler::get_random_individuals(individual_count, location_count);
 	individuals[0].infect(); // Infect one individual
 }
@@ -164,9 +165,9 @@ int main() {
 	size_t individual_count = DEFAULT_INDIVIDUAL_COUNT;
 	size_t total_epochs = DEFAULT_TOTAL_EPOCHS;
 	int repeat_count = DEFAULT_REPEAT_COUNT;
-	string input_graph_filename = "minimumantwerp.edges";
+	string input_graph_filename = "antwerp.edges";
 
-	individual_count *= 10;
+	individual_count *= 15;
 	//total_epochs *= 5;
 	thread_count = 4;
 	//repeat_count *= 4;
@@ -184,7 +185,7 @@ int main() {
 
 	// Generate a graph of location nodes & connections
 	LocationUndirectedGraph individual_graph;
-	size_t location_count;
+	size_t location_count, edge_count;
 	// Generate a population of healthy individuals
 	vector<Individual> individuals;
 
@@ -195,8 +196,9 @@ int main() {
 	//individual_graph = GraphHandler::get_location_undirected_graph_from_file("antwerp.edges");
 
 	// Reset individuals
-	reset_input(input_graph_filename, individual_count, location_count, individual_graph, individuals);
+	reset_input(input_graph_filename, individual_count, location_count, edge_count, individual_graph, individuals);
 	std::cout << "Location Count: " << location_count << std::endl; // print info once
+	std::cout << "Edge Count: " << edge_count << std::endl; // print info once
 
 	double time_start, time_end, total_time;
 
@@ -204,7 +206,7 @@ int main() {
 	cout << endl << "Running serial...";
 	total_time = 0.0;
 	for (int current_repeat = 0; current_repeat != repeat_count; ++current_repeat) {
-		reset_input(input_graph_filename, individual_count, location_count, individual_graph, individuals); // Reset individuals
+		reset_input(input_graph_filename, individual_count, location_count, edge_count, individual_graph, individuals); // Reset individuals
 		time_start = omp_get_wtime();
 		simulate_serial(individual_count, total_epochs, individual_graph, individuals);
 		time_end = omp_get_wtime() - time_start;
@@ -217,7 +219,7 @@ int main() {
 	cout << endl << "Running with OpenMP...";
 	total_time = 0.0;
 	for (int current_repeat = 0; current_repeat != repeat_count; ++current_repeat) {
-		reset_input(input_graph_filename, individual_count, location_count, individual_graph, individuals); // Reset individuals
+		reset_input(input_graph_filename, individual_count, location_count, edge_count, individual_graph, individuals); // Reset individuals
 		time_start = omp_get_wtime();
 		simulate_parallel(individual_count, total_epochs, individual_graph, individuals);
 		time_end = omp_get_wtime() - time_start;
