@@ -21,7 +21,7 @@ void simulate_parallel(size_t individual_count, size_t total_epochs, const Locat
 
 		int index = 0;
 		static int max_index = static_cast<int>(individuals.size());
-		static int chunk = static_cast<int>(max_index / 10);
+		static int chunk = static_cast<int>(max_index / CHUNK_SIZE_DIVIDER);
 
 		//	Randomly move all individuals
 

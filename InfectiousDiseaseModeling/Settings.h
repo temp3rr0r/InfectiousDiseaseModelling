@@ -17,3 +17,5 @@ static const size_t DEFAULT_TOTAL_EPOCHS = 60;
 static const size_t DEFAULT_INDIVIDUAL_COUNT = 400;
 
 static const int DEFAULT_REPEAT_COUNT = 10;
+
+static const int CHUNK_SIZE_DIVIDER = 10;
