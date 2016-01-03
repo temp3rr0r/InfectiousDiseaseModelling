@@ -25,7 +25,7 @@ void simulate_parallel(size_t individual_count, size_t total_epochs, const Locat
 
 		//	Randomly move all individuals
 
-		#pragma omp parallel private(index) shared(individuals, neighborhood_lookup_map, chunk)
+		#pragma omp parallel private(index) shared(individuals, neighborhood_lookup_map) firstprivate(chunk, max_index)
 		{
 			#pragma omp for schedule(dynamic, chunk) nowait
 			for (index = 0; index < max_index; index++) {
@@ -40,7 +40,7 @@ void simulate_parallel(size_t individual_count, size_t total_epochs, const Locat
 		}
 			
 		// foreach each individual
-		#pragma omp parallel private(index) shared(individuals, chunk)
+		#pragma omp parallel private(index) shared(individuals) firstprivate(chunk, max_index)
 		{
 			#pragma omp for schedule(dynamic,chunk) nowait
 			for (index = 0; index < max_index; index++) {
@@ -68,7 +68,7 @@ void simulate_parallel(size_t individual_count, size_t total_epochs, const Locat
 		//	Randomly move all individuals
 		size_t hit_count = 0;
 		size_t infected_count = 0;
-		#pragma omp parallel private(index) shared(individuals, chunk, infected_count, hit_count)
+		#pragma omp parallel private(index) shared(individuals, infected_count, hit_count) firstprivate(chunk, max_index)
 		{
 			#pragma omp for schedule(dynamic,chunk) nowait
 			for (index = 0; index < max_index; index++) {
