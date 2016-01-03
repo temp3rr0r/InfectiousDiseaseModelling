@@ -27,7 +27,7 @@ void simulate_parallel(size_t individual_count, size_t total_epochs, const Locat
 
 		#pragma omp parallel private(index) shared(individuals, neighborhood_lookup_map) firstprivate(chunk, max_index)
 		{
-			#pragma omp for schedule(dynamic, chunk) nowait
+			#pragma omp for schedule(static, chunk) nowait
 			for (index = 0; index < max_index; index++) {
 
 				Individual current_individual = individuals[index]; // Thread local variable
@@ -42,7 +42,7 @@ void simulate_parallel(size_t individual_count, size_t total_epochs, const Locat
 		// foreach each individual
 		#pragma omp parallel private(index) shared(individuals) firstprivate(chunk, max_index)
 		{
-			#pragma omp for schedule(dynamic,chunk) nowait
+			#pragma omp for schedule(static,chunk) nowait
 			for (index = 0; index < max_index; index++) {
 				Individual current_individual = individuals[index]; // Thread local variable
 
@@ -70,7 +70,7 @@ void simulate_parallel(size_t individual_count, size_t total_epochs, const Locat
 		size_t infected_count = 0;
 		#pragma omp parallel private(index) shared(individuals, infected_count, hit_count) firstprivate(chunk, max_index)
 		{
-			#pragma omp for schedule(dynamic,chunk) nowait
+			#pragma omp for schedule(static, chunk) nowait
 			for (index = 0; index < max_index; index++) {
 				// Check individuals for the number of epochs they're infected and tag them as healed and recovered if a threshold disease_duration is passed			
 				Individual current_individual = individuals[index]; // Thread local variable
