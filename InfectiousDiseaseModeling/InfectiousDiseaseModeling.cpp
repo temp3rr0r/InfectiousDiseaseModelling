@@ -20,11 +20,10 @@ void simulate_parallel(size_t individual_count, size_t total_epochs, const Locat
 	for (size_t current_epoch = 0; current_epoch < (total_epochs + 1); ++current_epoch) {
 
 		int index = 0;
-		static int max_index = individuals.size();
-		int chunk = max_index / 10;
+		static int max_index = static_cast<int>(individuals.size());
+		static int chunk = static_cast<int>(max_index / 10);
 
 		//	Randomly move all individuals
-
 		#pragma omp parallel private(index) shared(individuals, neighborhood_lookup_map, chunk)
 		{
 			#pragma omp for schedule(dynamic, chunk) nowait
@@ -40,45 +39,48 @@ void simulate_parallel(size_t individual_count, size_t total_epochs, const Locat
 		}
 			
 		// foreach each individual
-		// TODO: Add omp
-		for (size_t individual_index = 0; individual_index != individuals.size(); ++individual_index) {
+		#pragma omp parallel private(index) shared(individuals, chunk)
+		{
+			#pragma omp for schedule(dynamic,chunk) nowait
+			for (index = 0; index < max_index; index++) {
+				Individual current_individual = individuals[index]; // Thread local variable
 
-			if (individuals[individual_index].is_infected()) { // if the individual is infected
+				if (current_individual.is_infected()) { // if the individual is infected
 
-				// and meets another individual that is susceptible the disease
-				for (size_t affecting_individual = 0; affecting_individual != individuals.size(); ++affecting_individual) {
-					if (individual_index != affecting_individual) {
+					// and meets another individual that is susceptible to the disease
+					int affecting_index;
+					for (affecting_index = 0; affecting_index < max_index; affecting_index++) {
 
-						// Check if the susceptible individual gets infected
-						if (individuals[individual_index].get_location() == individuals[affecting_individual].get_location()) // in the same location
-							individuals[affecting_individual].try_infect();
+						if (index != affecting_index) {
+							Individual affecting_individual = individuals[affecting_index]; // Thread local variable
+							// Check if the susceptible individual gets infected
+							if (current_individual.get_location() == affecting_individual.get_location()) { // in the same location
+								affecting_individual.try_infect();
+								individuals[affecting_index] = affecting_individual; // Save affecting individual back to the shared memory space
+							}
+						}
 					}
 				}
 			}
 		}
 
-
-
 		//	Randomly move all individuals
-		#pragma omp parallel private(index) shared(individuals, chunk)
+		size_t hit_count = 0;
+		size_t infected_count = 0;
+		#pragma omp parallel private(index) shared(individuals, chunk, infected_count, hit_count)
 		{
 			#pragma omp for schedule(dynamic,chunk) nowait
 			for (index = 0; index < max_index; index++) {
 				// Check individuals for the number of epochs they're infected and tag them as healed and recovered if a threshold disease_duration is passed			
 				Individual current_individual = individuals[index]; // Thread local variable
 				current_individual.advance_epoch();
+				// Gather statistics about the current advance_epoch : what is the fraction of infected and hit individual
+				if (current_individual.is_infected())
+					++infected_count;
+				if (current_individual.is_hit())
+					++hit_count;
 				individuals[index] = current_individual; // Save individual back to the shared memory space
 			}
-		}
-
-		size_t hit_count = 0;
-		size_t infected_count = 0;
-		for (index = 0; index < max_index; index++) {
-			// Gather statistics about the current advance_epoch : what is the fraction of infected and hit individual
-			if (individuals[index].is_infected())
-				++infected_count;
-			if (individuals[index].is_hit())
-				++hit_count;
 		}
 
 		epoch_statistics.push_back(std::make_tuple(hit_count, infected_count));
