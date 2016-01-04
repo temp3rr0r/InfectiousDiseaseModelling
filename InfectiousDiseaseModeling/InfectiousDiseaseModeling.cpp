@@ -248,7 +248,7 @@ int main() {
 	//total_epochs *= 5;
 	thread_count = 4;
 	//repeat_count *= 4;
-	repeat_count = 10;
+	//repeat_count = 1;
 
 	// Set the thread count
 	omp_set_num_threads(thread_count);
