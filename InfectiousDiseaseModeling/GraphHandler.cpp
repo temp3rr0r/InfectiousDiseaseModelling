@@ -126,12 +126,11 @@ LocationUndirectedGraph GraphHandler::get_sample_location_undirected_graph() {
 // Save an Undirected location graph into a graphiz dot file, to disk
 void GraphHandler::save_undirected_graph_to_graphviz_file(std::string filename, const LocationUndirectedGraph& location_graph) {
 
-	std::vector<std::string> NameVec(location_graph.m_vertices.size(), "L"); // for dot file 
-
-
+	std::vector<std::string> NameVec(location_graph.m_vertices.size(), "Location"); // Name of the node
+	
 	std::ofstream dotfile(filename.c_str());
 	boost::write_graphviz(dotfile, location_graph,
-		boost::make_label_writer(&NameVec[0]) // TODO: bind id with the map lookup int to string
+		boost::make_label_writer(&NameVec[0])
 		);
 
 	dotfile.close();

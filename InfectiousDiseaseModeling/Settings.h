@@ -6,7 +6,7 @@
 // S means selector
 typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> LocationUndirectedGraph;
 
-static const bool SAVE_CSV = true;
+static const bool SAVE_CSV = false;
 static const bool SAVE_GRAPHVIZ = false;
 static const bool SHOW_EPIDEMIC_RESULTS = false;
 

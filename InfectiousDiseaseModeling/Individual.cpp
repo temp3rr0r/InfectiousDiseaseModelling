@@ -45,7 +45,7 @@ void Individual::move(std::vector<int>& node_neighbours) {
 
 	std::random_device random_device;
 	std::mt19937 mersenne_twister_engine(random_device());
-	std::uniform_int_distribution<> uniform_int_distribution(0, static_cast<int>(node_neighbours.size()));
+	std::uniform_int_distribution<> uniform_int_distribution(0, static_cast<int>(node_neighbours.size())); // Since we added the current location, no need to decarase the max int
 
 	location_ = node_neighbours[uniform_int_distribution(mersenne_twister_engine)]; // Assign the random location
 }
