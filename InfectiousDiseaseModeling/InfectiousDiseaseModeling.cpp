@@ -142,7 +142,6 @@ void simulate_parallel(int individual_count, int total_epochs, const LocationUnd
 //			}
 			#pragma omp for schedule(static,chunk) nowait
 			for (index = 0; index < max_index; ++index) {
-
 				if (!individuals[index].is_infected()) { // Don't copy the shared memory element, just check a boolean
 					Individual current_individual = individuals[index]; // Thread local variable
 					int affecting_index;
@@ -150,11 +149,11 @@ void simulate_parallel(int individual_count, int total_epochs, const LocationUnd
 
 						if (individuals[affecting_index].is_infected()) { // First do the binary check, then do the comparison because it is faster
 							Individual affecting_individual = individuals[affecting_index]; // Thread local variable
-							if (current_individual.get_location() == affecting_individual.get_location()) {
+							if (current_individual.get_location() == affecting_individual.get_location()) { // Now do the "expensive" comparison
 								current_individual.try_infect();
-								if (current_individual.is_infected()) {
+								if (current_individual.is_infected()) { // Don't save to shared memory if the invidual wasn't eventually infected
 									individuals[index] = current_individual; // Save affecting individual back to the shared memory space
-									break; // Since the current individual just got infected, check the next individuals from the thread's chunk
+									break; // No need to find other infected individuals in the same location, move the the next one
 								}
 							}
 						}
