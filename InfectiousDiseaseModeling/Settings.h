@@ -8,12 +8,12 @@ typedef boost::adjacency_list<boost::vecS, boost::vecS, boost::undirectedS> Loca
 
 static const bool SAVE_CSV = false;
 static const bool SAVE_GRAPHVIZ = false;
-static const bool SHOW_EPIDEMIC_RESULTS = false;
+static const bool SHOW_EPIDEMIC_RESULTS = true;
 
 static const int DEFAULT_NUMBER_OF_THREADS = 4;
 
-static const size_t DEFAULT_TOTAL_EPOCHS = 60;
-static const size_t DEFAULT_INDIVIDUAL_COUNT = 400;
+static const int DEFAULT_TOTAL_EPOCHS = 60;
+static const int DEFAULT_INDIVIDUAL_COUNT = 400;
 
 static const int DEFAULT_REPEAT_COUNT = 10;
 

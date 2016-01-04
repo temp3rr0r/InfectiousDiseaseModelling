@@ -39,7 +39,7 @@ void Individual::try_infect() {
 }
 
 // Randomly move the individual to another location or stay at the same location
-void Individual::move(std::vector<size_t>& node_neighbours) {
+void Individual::move(std::vector<int>& node_neighbours) {
 
 	node_neighbours.push_back(location_); // Add current location in the new locations vector
 
@@ -51,12 +51,12 @@ void Individual::move(std::vector<size_t>& node_neighbours) {
 }
 
 // Set the location
-void Individual::set_location(size_t location) {
+void Individual::set_location(int location) {
 	location_ = location;
 }
 
 // Get the location
-size_t Individual::get_location() const {
+int Individual::get_location() const {
 	return location_;
 }
 
