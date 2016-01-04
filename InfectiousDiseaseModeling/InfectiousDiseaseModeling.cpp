@@ -7,10 +7,7 @@
 using namespace std;
 using namespace boost;
 
-void simulate_parallel(int individual_count, int total_epochs, const LocationUndirectedGraph& individual_graph, vector<Individual>& individuals) {
-
-	// Statistics vector, index is epoch
-	vector<std::tuple<int, int>> epoch_statistics;
+void simulate_parallel(int individual_count, std::uint8_t total_epochs, const LocationUndirectedGraph& individual_graph, vector<Individual>& individuals, vector<std::tuple<int, int>>& epoch_statistics) {
 
 	int index = 0;
 	static int max_index = static_cast<int>(individuals.size());
@@ -20,7 +17,7 @@ void simulate_parallel(int individual_count, int total_epochs, const LocationUnd
 	map<int, vector<int>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
 
 	// Repeat for all the epochs
-	for (int current_epoch = 0; current_epoch < (total_epochs + 1); ++current_epoch) {
+	for (std::uint8_t current_epoch = 0; current_epoch < (total_epochs + 1); ++current_epoch) {
 
 		//	Randomly move all individuals
 		#pragma omp parallel private(index) shared(individuals, neighborhood_lookup_map) firstprivate(chunk, max_index)
@@ -159,12 +156,10 @@ void reset_input(string filename, int individual_count, int& location_count, int
 
 	individuals = GraphHandler::get_random_individuals(individual_count, location_count); // Randomize positions of individuals
 
-	// Infect 5 individuals
-	individuals[0].infect();
-	individuals[1].infect();
-	individuals[2].infect();
-	individuals[3].infect();
-	individuals[4].infect();
+	// Infect initial individuals
+	for (int i = 0; i < INITIAL_INFECTED_COUNT; ++i) {
+		individuals[i].infect();
+	}
 }
 
 int main() {
@@ -172,12 +167,12 @@ int main() {
 	// Get the default simulation values
 	int thread_count = DEFAULT_NUMBER_OF_THREADS;
 	int individual_count = DEFAULT_INDIVIDUAL_COUNT;
-	int total_epochs = DEFAULT_TOTAL_EPOCHS;
-	int repeat_count = DEFAULT_REPEAT_COUNT;
+	std::uint8_t total_epochs = DEFAULT_TOTAL_EPOCHS;
+	std::uint8_t repeat_count = DEFAULT_REPEAT_COUNT;
 	string input_graph_filename = "antwerp.edges";//"minimumantwerp.edges"; // Read locations from the full Antwerp graph or from a minimal version (500 nodes)
 
 	//individual_count *= 10;
-	individual_count = 50313; // population of Antwerp is 503138
+	individual_count = 5000; // population of Antwerp is 503138
 	//total_epochs *= 5;
 	total_epochs = 1; // 30 days
 	thread_count = 4;
@@ -191,13 +186,14 @@ int main() {
 	std::cout << "----- Infectious Diease Modelling -----" << std::endl;
 	std::cout << "Number of threads: " << thread_count << std::endl;
 	std::cout << "Individual Count: " << individual_count << std::endl;
-	std::cout << "Total Epochs: " << total_epochs << std::endl;
+	std::cout << "Total Epochs: " << static_cast<int>(total_epochs) << std::endl;
 	std::cout << "Graph from file: " << input_graph_filename << std::endl;
-	std::cout << "Repeat count: " << repeat_count << std::endl;
+	std::cout << "Repeat count: " << static_cast<int>(repeat_count) << std::endl;
 
 	LocationUndirectedGraph individual_graph; //Graph of location nodes & connections
 	int location_count, edge_count;	
 	vector<Individual> individuals; // Population of healthy individuals
+	vector<std::tuple<int, int>> epoch_statistics;
 	
 	// Reset individuals
 	reset_input(input_graph_filename, individual_count, location_count, edge_count, individual_graph, individuals);
@@ -205,13 +201,11 @@ int main() {
 	std::cout << "Edge Count: " << edge_count << std::endl; // print info once
 
 	double time_start, time_end, total_time;
-
-	// TODO: Only count in time cases were the epidemic peak is > 0
-
+	
 	// Serial
 	cout << endl << "Running serial...";
 	total_time = 0.0;
-	for (int current_repeat = 0; current_repeat != repeat_count; ++current_repeat) {
+	for (std::uint8_t current_repeat = 0; current_repeat != repeat_count; ++current_repeat) {
 		reset_input(input_graph_filename, individual_count, location_count, edge_count, individual_graph, individuals); // Reset individuals
 		time_start = omp_get_wtime();
 		simulate_serial(individual_count, total_epochs, individual_graph, individuals);
@@ -224,16 +218,16 @@ int main() {
 	// OpenMP
 	cout << endl << "Running with OpenMP...";
 	total_time = 0.0;
-	for (int current_repeat = 0; current_repeat != repeat_count; ++current_repeat) {
+	for (std::uint8_t current_repeat = 0; current_repeat != repeat_count; ++current_repeat) {
 		reset_input(input_graph_filename, individual_count, location_count, edge_count, individual_graph, individuals); // Reset individuals
 		time_start = omp_get_wtime();
-		simulate_parallel(individual_count, total_epochs, individual_graph, individuals);
+		simulate_parallel(individual_count, total_epochs, individual_graph, individuals, epoch_statistics);
 		time_end = omp_get_wtime() - time_start;
 		total_time += time_end;
+		assert(assert_epidemic_results(individual_count, epoch_statistics));
 		cout << ".";
 	}
 	cout << (total_time / repeat_count) * 1000.0 << " ms" << endl;
 
 	system("pause");	
 }
-

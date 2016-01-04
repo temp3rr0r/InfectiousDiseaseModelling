@@ -27,8 +27,6 @@ std::map<int, std::vector<int>> GraphHandler::get_node_neighborhood_lookup_map(c
 	return returning_neighborhood_lookup_map;
 }
 
-// TODO: return "location int" vector from graph vertices (by tie of the graph iterators). Must be a distinct list
-
 // Generate a vector of individuals and assign a random location within the requested ranges
 std::vector<Individual> GraphHandler::get_random_individuals(int individual_count, int location_count) {
 
@@ -59,31 +57,34 @@ LocationUndirectedGraph GraphHandler::get_location_undirected_graph_from_file(st
 	if (!input_file_stream.is_open())
 		return 1;
 
-	typedef tokenizer<escaped_list_separator<char>> Tokenizer;
+	typedef tokenizer<escaped_list_separator<char>> Tokenizer; // boost tokenizer parses comma separated values
 
 	vector<string> string_vector;
 	string current_line;
 
-	map<int, int> map_location_to_index;
-	int current_index = 0;
+	// We use size_t because the input file has values much larger than uint32_t for each location
+	// and int for the second part of the map because the distinct location count is small and the boost:undirected graph
+	// accepts location indices of type int
+	map<size_t, int> map_location_to_index;
+	int current_location_index = 0;
 
 	while (getline(input_file_stream, current_line)) {
 		Tokenizer tok(current_line);
 		string_vector.assign(tok.begin(), tok.end());
 
-		int first_edge = stoull(string_vector[0]);
-		int second_edge = stoull(string_vector[1]);
+		size_t first_edge = stoull(string_vector[0]);
+		size_t second_edge = stoull(string_vector[1]);
 
 		if (map_location_to_index.find(first_edge) == map_location_to_index.end()) {
 			// not found
-			map_location_to_index[first_edge] = current_index;
-			current_index++;
+			map_location_to_index[first_edge] = current_location_index;
+			current_location_index++;
 		}
 
 		if (map_location_to_index.find(second_edge) == map_location_to_index.end()) {
 			// not found
-			map_location_to_index[second_edge] = current_index;
-			current_index++;
+			map_location_to_index[second_edge] = current_location_index;
+			current_location_index++;
 		}
 
 		add_edge(map_location_to_index[first_edge], map_location_to_index[second_edge], location_graph);
@@ -137,7 +138,7 @@ void GraphHandler::save_undirected_graph_to_graphviz_file(std::string filename, 
 }
 
 // Save the hit and infected counts for each epoch into a csv file, to disk
-void GraphHandler::save_epoch_statistics_to_csv(std::string filename, const std::vector<std::tuple<int, int>> epoch_statistics){
+void GraphHandler::save_epoch_statistics_to_csv(std::string filename, const std::vector<std::tuple<int, int>>& epoch_statistics){
 
 	std::ofstream output_csv;
 	output_csv.open(std::string(filename));
@@ -153,7 +154,7 @@ void GraphHandler::save_epoch_statistics_to_csv(std::string filename, const std:
 }
 
 // Show the Hit percentage (fraction of the total population that got infected), epidemic peak percentage and the epoch of the epidemic peak
-void GraphHandler::show_epidemic_results(int population_count, const std::vector<std::tuple<int, int>> epoch_statistics) {
+void GraphHandler::show_epidemic_results(int population_count, const std::vector<std::tuple<int, int>>& epoch_statistics) {
 	
 	// Fraction of the population that got infected
 	int hit_count = get<0>(epoch_statistics[epoch_statistics.size() - 1]);
@@ -174,4 +175,35 @@ void GraphHandler::show_epidemic_results(int population_count, const std::vector
 	std::cout << "Hit: " << static_cast<double>(hit_count) / static_cast<double>(population_count) << " %"<< std::endl;
 	std::cout << "Epidemic Peak:" << static_cast<double>(epidemic_peak_size) / static_cast<double>(population_count) << " %" << std::endl;
 	std::cout << "Epidemic Peak Epoch: " << epidemic_peak_epoch << std::endl;
+}
+
+// Asserts the resulting statistics
+bool GraphHandler::assert_epidemic_results(int population_count, const std::vector<std::tuple<int, int>>& epoch_statistics) {
+
+	bool results_valid = true;
+
+	int max_hit_count = 0;
+			
+	for (int epoch_index = 0; epoch_index != epoch_statistics.size(); ++epoch_index) {
+
+		int current_hit_count = get<0>(epoch_statistics[epoch_index]);
+		int current_infected_count = get<1>(epoch_statistics[epoch_index]);
+
+		if (current_hit_count > max_hit_count) {
+			max_hit_count = current_hit_count;
+		}
+		// Hit count should always increase or stay the same, not decrease
+		// Also, the number of infected and the number of hit should be the same or less than the total population count
+		if (current_hit_count < max_hit_count || (current_hit_count <= population_count) || (current_infected_count <= population_count) ) {
+			results_valid = false;
+			break;
+		}
+	}
+
+	// We know at time step 0, there are exactly INITIAL_INFECTED_COUNT infected individuals
+	if (get<1>(epoch_statistics[0]) != INITIAL_INFECTED_COUNT) {
+		results_valid = false;
+	}
+
+	return results_valid;
 }

@@ -1,5 +1,4 @@
 #pragma once
-#include <cstdint>
 #include <vector>
 #include "IndividualParameters.h"
 
@@ -7,7 +6,7 @@
 class Individual {
 public:		
 	Individual() : infected_(false), hit_(false), recovered_(), epochs_infected_(0), location_(0) { } // Default constructor
-	Individual(bool infected, bool hit, bool recovered, uint8_t days_infected, int location) // Full constructor
+	Individual(bool infected, bool hit, bool recovered, std::uint8_t days_infected, int location) // Full constructor
 		: infected_(infected), hit_(hit), recovered_(recovered), epochs_infected_(days_infected), location_(location) { }
 	void infect();
 	void recover();
@@ -22,7 +21,7 @@ private:
 	bool infected_;
 	bool hit_; // Indicates if individual was infected as some point
 	bool recovered_;
-	uint8_t epochs_infected_;
+	std::uint8_t epochs_infected_;
 	int location_; // Refers to the graph node that represents the current location of the individual
 	IndividualParameters parameters_;
 };

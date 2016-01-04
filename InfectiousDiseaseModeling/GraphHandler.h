@@ -14,6 +14,7 @@ public:
 	static LocationUndirectedGraph get_location_undirected_graph_from_file(std::string filename);
 	static LocationUndirectedGraph get_sample_location_undirected_graph();
 	static void save_undirected_graph_to_graphviz_file(std::string filename, const LocationUndirectedGraph& location_graph);
-	static void save_epoch_statistics_to_csv(std::string filename, const std::vector<std::tuple<int, int>> epoch_statistics);
-	static void show_epidemic_results(int population_count, const std::vector<std::tuple<int, int>> epoch_statistics);
+	static void save_epoch_statistics_to_csv(std::string filename, const std::vector<std::tuple<int, int>>& epoch_statistics);
+	static void show_epidemic_results(int population_count, const std::vector<std::tuple<int, int>>& epoch_statistics);
+	static bool assert_epidemic_results(int population_count, const std::vector<std::tuple<int, int>>& epoch_statistics);
 };
