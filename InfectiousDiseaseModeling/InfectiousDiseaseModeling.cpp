@@ -119,6 +119,27 @@ void simulate_parallel(int individual_count, int total_epochs, const LocationUnd
 //			}
 
 			// 3rd method, only change the chunk's individuals, to avoid critical region
+//			#pragma omp for schedule(static,chunk) nowait
+//			for (index = 0; index < max_index; ++index) {
+//
+//				if (!individuals[index].is_infected()) { // Don't copy the shared memory element, just check a boolean
+//					Individual current_individual = individuals[index]; // Thread local variable
+//					int affecting_index;
+//					for (affecting_index = 0; affecting_index < individual_count; ++affecting_index) {
+//
+//						if (individuals[affecting_index].is_infected()) { // First do the binary check, then do the comparison because it is faster
+//							Individual affecting_individual = individuals[affecting_index]; // Thread local variable
+//							if (current_individual.get_location() == affecting_individual.get_location()) {
+//								current_individual.try_infect();
+//								if (current_individual.is_infected()) {
+//									individuals[index] = current_individual; // Save affecting individual back to the shared memory space
+//									break; // Since the current individual just got infected, check the next individuals from the thread's chunk
+//								}
+//							}
+//						}
+//					}
+//				}
+//			}
 			#pragma omp for schedule(static,chunk) nowait
 			for (index = 0; index < max_index; ++index) {
 
@@ -146,7 +167,7 @@ void simulate_parallel(int individual_count, int total_epochs, const LocationUnd
 		//	Randomly move all individuals
 		int hit_count = 0;
 		int infected_count = 0;
-		#pragma omp parallel private(index) shared(individuals, infected_count, hit_count) firstprivate(chunk, max_index)
+		#pragma omp parallel private(index) shared(individuals) firstprivate(chunk, max_index) reduction(+:infected_count, hit_count)
 		{
 			#pragma omp for schedule(static, chunk) nowait
 			for (index = 0; index < max_index; ++index) {
@@ -154,13 +175,14 @@ void simulate_parallel(int individual_count, int total_epochs, const LocationUnd
 				Individual current_individual = individuals[index]; // Thread local variable
 				current_individual.advance_epoch();
 				// Gather statistics about the current advance_epoch : what is the fraction of infected and hit individual
-				if (current_individual.is_infected())
-					#pragma omp atomic
-					++infected_count;
-				if (current_individual.is_hit())
-					#pragma omp atomic
-					++hit_count;
 				individuals[index] = current_individual; // Save individual back to the shared memory space
+				if (current_individual.is_infected()) {
+					//#pragma omp atomic
+					++infected_count;
+					++hit_count;
+				} else if (current_individual.is_hit())
+					//#pragma omp atomic
+					++hit_count;
 			}
 		} // Implicit Barrier
 
@@ -254,7 +276,7 @@ int main() {
 	//individual_count *= 10;
 	individual_count = 4000; // population of Antwerp is 503138
 	//total_epochs *= 5;
-	total_epochs = 5;
+	total_epochs = 30;
 	thread_count = 4;
 	//repeat_count *= 4;
 	repeat_count = 1;
