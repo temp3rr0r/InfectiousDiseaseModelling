@@ -137,6 +137,7 @@
       <AdditionalIncludeDirectories>C:\local\boost_1_60_0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <OpenMP>GenerateParallelCode</OpenMP>
       <Cpp0xSupport>true</Cpp0xSupport>
+      <UseProcessorExtensions>None</UseProcessorExtensions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -155,6 +156,7 @@
     <ClCompile Include="GraphHandler.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Makefile" />
     <ClInclude Include="Settings.h" />
     <ClInclude Include="Individual.h" />
     <ClInclude Include="IndividualParameters.h" />

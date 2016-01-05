@@ -7,7 +7,8 @@
 using namespace std;
 using namespace boost;
 
-void simulate_parallel(int individual_count, std::uint8_t total_epochs, const LocationUndirectedGraph& individual_graph, vector<Individual>& individuals, vector<std::tuple<int, int>>& epoch_statistics) {
+void simulate_parallel(int individual_count, std::uint8_t total_epochs, const LocationUndirectedGraph& individual_graph,
+	vector<Individual>& individuals, vector<std::tuple<int, int, int>>& epoch_statistics) {
 
 	int index = 0;
 	static int max_index = static_cast<int>(individuals.size());
@@ -64,7 +65,8 @@ void simulate_parallel(int individual_count, std::uint8_t total_epochs, const Lo
 		// Advance the epoch for every individual and gather infected & hit statistics
 		int hit_count = 0;
 		int infected_count = 0;
-		#pragma omp parallel private(index) shared(individuals) firstprivate(chunk, max_index) reduction(+:infected_count, hit_count)
+		int recovered_count = 0;
+		#pragma omp parallel private(index) shared(individuals) firstprivate(chunk, max_index) reduction(+:infected_count, hit_count, recovered_count)
 		{
 			// Since we only change individuals that are "chunked" by index for each thread, there is no need for critical/atomic region
 			#pragma omp for schedule(static, chunk) nowait
@@ -73,15 +75,16 @@ void simulate_parallel(int individual_count, std::uint8_t total_epochs, const Lo
 				current_individual.advance_epoch();	// Check individuals for the number of epochs they're infected and tag them as healed and recovered if a threshold disease_duration is passed					
 				individuals[index] = current_individual; // Save individual back to the shared memory space
 				// Near the end of the parallel region, perform reduction. Gather statistics about the current advance_epoch : what is the fraction of infected and hit individual
-				if (current_individual.is_infected()) {
+				if (current_individual.is_infected())
 					++infected_count;
+				if (current_individual.is_hit())
 					++hit_count;
-				} else if (current_individual.is_hit())
-					++hit_count;
+				if (current_individual.is_recovered())
+					++recovered_count;
 			}
 		} // Implicit Barrier
 
-		epoch_statistics.push_back(std::make_tuple(hit_count, infected_count)); // Store tuple of statistics for the current epoch
+		epoch_statistics.push_back(std::make_tuple(hit_count, infected_count, recovered_count)); // Store tuple of statistics for the current epoch
 	}
 
 	if (SAVE_CSV)
@@ -95,7 +98,7 @@ void simulate_parallel(int individual_count, std::uint8_t total_epochs, const Lo
 void simulate_serial(int individual_count, int total_epochs, const LocationUndirectedGraph& individual_graph, vector<Individual>& individuals) {
 	
 	// Statistics vector, index is epoch
-	vector<std::tuple<int, int>> epoch_statistics;
+	vector<std::tuple<int, int, int>> epoch_statistics;
 	
 	// Generate a look up map with the neighbouring nodes for each graph node
 	map<int, vector<int>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
@@ -126,6 +129,7 @@ void simulate_serial(int individual_count, int total_epochs, const LocationUndir
 		
 		int hit_count = 0;
 		int infected_count = 0;
+		int recovered_count = 0;
 		for (Individual& current_individual : individuals) {
 			// Check individuals for the number of epochs they're infected and tag them as healed and recovered if a threshold disease_duration is passed
 			current_individual.advance_epoch();
@@ -135,8 +139,10 @@ void simulate_serial(int individual_count, int total_epochs, const LocationUndir
 				++infected_count;
 			if (current_individual.is_hit())
 				++hit_count;
+			if (current_individual.is_recovered())
+				++recovered_count;
 		}
-		epoch_statistics.push_back(std::make_tuple(hit_count, infected_count));
+		epoch_statistics.push_back(std::make_tuple(hit_count, infected_count, recovered_count));
 	}
 	
 	if (SAVE_CSV)
@@ -172,7 +178,7 @@ int main() {
 	string input_graph_filename = "antwerp.edges";//"minimumantwerp.edges"; // Read locations from the full Antwerp graph or from a minimal version (500 nodes)
 
 	//individual_count *= 10;
-	individual_count = 20000; // population of Antwerp is 503138
+	individual_count = 400; // population of Antwerp is 503138
 	//total_epochs *= 5;
 	total_epochs = 30; // 30 days
 	thread_count = 4;
@@ -193,7 +199,7 @@ int main() {
 	LocationUndirectedGraph individual_graph; //Graph of location nodes & connections
 	int location_count, edge_count;	
 	vector<Individual> individuals; // Population of healthy individuals
-	vector<std::tuple<int, int>> epoch_statistics;
+	vector<std::tuple<int, int, int>> epoch_statistics;
 	
 	// Reset individuals
 	reset_input(input_graph_filename, individual_count, location_count, edge_count, individual_graph, individuals);
@@ -224,8 +230,11 @@ int main() {
 		simulate_parallel(individual_count, total_epochs, individual_graph, individuals, epoch_statistics);
 		time_end = omp_get_wtime() - time_start;
 		total_time += time_end;
-		assert(assert_epidemic_results(individual_count, epoch_statistics));
+		if (!GraphHandler::assert_epidemic_results(individual_count, epoch_statistics))
+			cout << "Error." << endl;
 		cout << ".";
 	}
 	cout << (total_time / repeat_count) * 1000.0 << " ms" << endl;
+
+	system("pause");
 }

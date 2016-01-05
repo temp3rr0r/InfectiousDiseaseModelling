@@ -138,26 +138,29 @@ void GraphHandler::save_undirected_graph_to_graphviz_file(std::string filename, 
 }
 
 // Save the hit and infected counts for each epoch into a csv file, to disk
-void GraphHandler::save_epoch_statistics_to_csv(std::string filename, const std::vector<std::tuple<int, int>>& epoch_statistics){
+void GraphHandler::save_epoch_statistics_to_csv(std::string filename, const std::vector<std::tuple<int, int, int>>& epoch_statistics){
 
 	std::ofstream output_csv;
 	output_csv.open(std::string(filename));
 
 	// Write columns
-	output_csv << "epoch,hitcount,infectedcount" << std::endl;
+	output_csv << "epoch,hitcount,infectedcount,recoveredcount" << std::endl;
 	
 	// Write a line for each epoch
 	for (int epoch_index = 0; epoch_index != epoch_statistics.size(); ++epoch_index)
-		output_csv << epoch_index << "," << get<0>(epoch_statistics[epoch_index]) << "," << get<1>(epoch_statistics[epoch_index]) << std::endl;
+		output_csv << epoch_index << "," << get<0>(epoch_statistics[epoch_index]) << "," << get<1>(epoch_statistics[epoch_index])
+			<< "," << get<2>(epoch_statistics[epoch_index]) << std::endl;
 
 	output_csv.close();
 }
 
 // Show the Hit percentage (fraction of the total population that got infected), epidemic peak percentage and the epoch of the epidemic peak
-void GraphHandler::show_epidemic_results(int population_count, const std::vector<std::tuple<int, int>>& epoch_statistics) {
+void GraphHandler::show_epidemic_results(int population_count, const std::vector<std::tuple<int, int, int>>& epoch_statistics) {
 	
 	// Fraction of the population that got infected
 	int hit_count = get<0>(epoch_statistics[epoch_statistics.size() - 1]);
+	int infected_count = get<1>(epoch_statistics[epoch_statistics.size() - 1]);
+	int recovered_count = get<2>(epoch_statistics[epoch_statistics.size() - 1]);
 
 	// Epidemic peak %
 	int epidemic_peak_size = 0;
@@ -173,12 +176,14 @@ void GraphHandler::show_epidemic_results(int population_count, const std::vector
 
 	std::cout << std::endl << "-- Epidemic Results --" << std::endl;
 	std::cout << "Hit: " << static_cast<double>(hit_count) / static_cast<double>(population_count) << " %"<< std::endl;
+	std::cout << "Infected: " << static_cast<double>(infected_count) / static_cast<double>(population_count) << " %" << std::endl;
+	std::cout << "Recovered: " << static_cast<double>(recovered_count) / static_cast<double>(population_count) << " %" << std::endl;
 	std::cout << "Epidemic Peak:" << static_cast<double>(epidemic_peak_size) / static_cast<double>(population_count) << " %" << std::endl;
 	std::cout << "Epidemic Peak Epoch: " << epidemic_peak_epoch << std::endl;
 }
 
 // Asserts the resulting statistics
-bool GraphHandler::assert_epidemic_results(int population_count, const std::vector<std::tuple<int, int>>& epoch_statistics) {
+bool GraphHandler::assert_epidemic_results(int population_count, const std::vector<std::tuple<int, int, int>>& epoch_statistics) {
 
 	bool results_valid = true;
 
@@ -188,22 +193,19 @@ bool GraphHandler::assert_epidemic_results(int population_count, const std::vect
 
 		int current_hit_count = get<0>(epoch_statistics[epoch_index]);
 		int current_infected_count = get<1>(epoch_statistics[epoch_index]);
+		int current_recovered_count = get<2>(epoch_statistics[epoch_index]);
 
 		if (current_hit_count > max_hit_count) {
 			max_hit_count = current_hit_count;
 		}
-		// Hit count should always increase or stay the same, not decrease
-		// Also, the number of infected and the number of hit should be the same or less than the total population count
-		if (current_hit_count < max_hit_count || (current_hit_count <= population_count) || (current_infected_count <= population_count) ) {
+		// The number of infected and the number of hit should be the same or less than the total population count
+		if ((current_hit_count > population_count) || (current_infected_count > population_count)
+			|| (current_infected_count > current_hit_count) || (current_recovered_count > population_count)) {
+			std::cout << "Current Hit: " << current_hit_count << "Max hit: " << max_hit_count << " Current Infected: " << current_infected_count
+				<< "Current Recovered: " << current_recovered_count <<   std::endl;
 			results_valid = false;
 			break;
 		}
 	}
-
-	// We know at time step 0, there are exactly INITIAL_INFECTED_COUNT infected individuals
-	if (get<1>(epoch_statistics[0]) != INITIAL_INFECTED_COUNT) {
-		results_valid = false;
-	}
-
 	return results_valid;
 }
