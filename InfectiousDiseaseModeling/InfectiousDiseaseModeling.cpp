@@ -38,7 +38,7 @@ void simulate_parallel(int individual_count, std::uint8_t total_epochs, const Lo
 		#pragma omp parallel private(index) shared(individuals) firstprivate(chunk, max_index)
 		{
 			// Since we only change individuals that are "chunked" by index for each thread, there is no need for critical/atomic region
-			#pragma omp for schedule(static,chunk) nowait
+			#pragma omp for schedule(auto) nowait
 			for (index = 0; index < max_index; ++index) {
 				if (!individuals[index].is_infected()) { // Don't copy the shared memory element, just check a boolean
 					Individual current_individual = individuals[index]; // Thread local variable
@@ -172,9 +172,9 @@ int main() {
 	string input_graph_filename = "antwerp.edges";//"minimumantwerp.edges"; // Read locations from the full Antwerp graph or from a minimal version (500 nodes)
 
 	//individual_count *= 10;
-	individual_count = 5000; // population of Antwerp is 503138
+	individual_count = 20000; // population of Antwerp is 503138
 	//total_epochs *= 5;
-	total_epochs = 1; // 30 days
+	total_epochs = 30; // 30 days
 	thread_count = 4;
 	//repeat_count *= 4;
 	repeat_count = 1;
@@ -203,17 +203,17 @@ int main() {
 	double time_start, time_end, total_time;
 	
 	// Serial
-	cout << endl << "Running serial...";
-	total_time = 0.0;
-	for (std::uint8_t current_repeat = 0; current_repeat != repeat_count; ++current_repeat) {
-		reset_input(input_graph_filename, individual_count, location_count, edge_count, individual_graph, individuals); // Reset individuals
-		time_start = omp_get_wtime();
-		simulate_serial(individual_count, total_epochs, individual_graph, individuals);
-		time_end = omp_get_wtime() - time_start;
-		total_time += time_end;
-		cout << ".";
-	}
-	cout << (total_time / repeat_count) * 1000.0 << " ms" << endl;
+//	cout << endl << "Running serial...";
+//	total_time = 0.0;
+//	for (std::uint8_t current_repeat = 0; current_repeat != repeat_count; ++current_repeat) {
+//		reset_input(input_graph_filename, individual_count, location_count, edge_count, individual_graph, individuals); // Reset individuals
+//		time_start = omp_get_wtime();
+//		simulate_serial(individual_count, total_epochs, individual_graph, individuals);
+//		time_end = omp_get_wtime() - time_start;
+//		total_time += time_end;
+//		cout << ".";
+//	}
+//	cout << (total_time / repeat_count) * 1000.0 << " ms" << endl;
 
 	// OpenMP
 	cout << endl << "Running with OpenMP...";
@@ -228,6 +228,4 @@ int main() {
 		cout << ".";
 	}
 	cout << (total_time / repeat_count) * 1000.0 << " ms" << endl;
-
-	system("pause");	
 }
