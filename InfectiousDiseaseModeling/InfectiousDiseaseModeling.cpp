@@ -14,8 +14,8 @@ void simulate_parallel(int individual_count, std::uint8_t total_epochs, const Lo
 	vector<Individual>& individuals, vector<std::tuple<int, int, int>>& epoch_statistics) {
 
 	int index = 0;
-	static int max_index = static_cast<int>(individuals.size());
-	static int chunk = static_cast<int>(max_index / DEFAULT_NUMBER_OF_THREADS);
+	int max_index = static_cast<int>(individuals.size());
+	int chunk = static_cast<int>(max_index / DEFAULT_NUMBER_OF_THREADS);
 
 	// Generate a look up map with the neighbouring nodes for each graph node
 	map<int, vector<int>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
@@ -184,7 +184,7 @@ void benchmark() {
 	int benchmark_init_thread_count = 1;
 	int benchmark_max_thread_count = 4;
 	size_t benchmark_repeat_count = 1; // 10
-	size_t benchmark_init_individual_count = 10000; // 1000;
+	size_t benchmark_init_individual_count = 1000; // 1000;
 	size_t benchmark_individual_count_multiplier = 10;
 	size_t benchmark_max_individual_count = 10000; // 100000; // population of Antwerp is 503138
 	std::string execution_type = "serial";	
