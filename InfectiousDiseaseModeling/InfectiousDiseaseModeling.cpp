@@ -183,24 +183,24 @@ void benchmark() {
 	// Benchmark settings
 	int benchmark_init_thread_count = 1;
 	int benchmark_max_thread_count = 4;
-	size_t benchmark_repeat_count = 4; // 10
-	size_t benchmark_init_individual_count = 100; // 1000;
+	size_t benchmark_repeat_count = 1; // 10
+	size_t benchmark_init_individual_count = 10000; // 1000;
 	size_t benchmark_individual_count_multiplier = 10;
-	size_t benchmark_max_individual_count = 100000; // 100000; // population of Antwerp is 503138
+	size_t benchmark_max_individual_count = 10000; // 100000; // population of Antwerp is 503138
 	std::string execution_type = "serial";	
-	total_epochs = 30; // 30 days
+	total_epochs = 7; // 30 days
 
 	// Set the thread count
 	omp_set_num_threads(benchmark_init_thread_count);
 
 	// Print calculation info
-	std::cout << "----- Benchmark Infectious Diease Modelling -----" << std::endl;
+	std::cout << "----- Benchmark Infectious Disease Modelling -----" << std::endl;
 	
 	std::time_t timer = std::time(nullptr);
 	//std::string benchmark_file_name = "benchmark_" + std::string(std::asctime(std::localtime(&timer))) + ".csv";
 	std::string benchmark_file_name = "benchmark_.csv";
 	std::stringstream benchmark_string_stream;
-	benchmark_string_stream << "execution_time,execution_type,thread_count,individual_count,total_epochs,epoch_timestep,repeat_count" << std::endl;
+	benchmark_string_stream << "execution_time,execution_type,thread_count,individual_count,node_count,edge_count,total_epochs,epoch_timestep,repeat_count" << std::endl;
 		
 	LocationUndirectedGraph individual_graph; //Graph of location nodes & connections
 	int location_count, edge_count;
@@ -215,8 +215,7 @@ void benchmark() {
 	double time_start, time_end, total_time, average_execution_time;
 
 	// Serial
-	cout << endl << "Running serial..." << std::flush;
-	
+	cout << endl << "Running serial..." << std::flush;	
 	for (size_t benchmark_individual_count = benchmark_init_individual_count; benchmark_individual_count <= benchmark_max_individual_count;
 		benchmark_individual_count *= benchmark_individual_count_multiplier) {
 
@@ -232,8 +231,8 @@ void benchmark() {
 		}
 		average_execution_time = (total_time / benchmark_repeat_count) * 1000.0;
 
-		benchmark_string_stream << average_execution_time << "," << execution_type << "," 
-			<< 1 << "," << benchmark_individual_count << "," << static_cast<int>(total_epochs)
+		benchmark_string_stream << average_execution_time << "," << execution_type << ","  << 1 << "," << benchmark_individual_count << ","
+			<< location_count << "," << edge_count << "," << static_cast<int>(total_epochs)
 			<< "," << 1 << "," << benchmark_repeat_count << std::endl;
 	}
 
@@ -250,6 +249,7 @@ void benchmark() {
 			omp_set_num_threads(current_thread_count);
 
 			total_time = 0.0;
+			average_execution_time = 0.0;
 			for (std::uint8_t current_repeat = 0; current_repeat != benchmark_repeat_count; ++current_repeat) {
 				reset_input(input_graph_filename, benchmark_individual_count, location_count, edge_count, individual_graph, individuals); // Reset individuals
 				time_start = omp_get_wtime();
@@ -263,8 +263,8 @@ void benchmark() {
 
 			average_execution_time = (total_time / benchmark_repeat_count) * 1000.0;
 
-			benchmark_string_stream << average_execution_time << "," << execution_type << ","
-				<< current_thread_count << "," << benchmark_individual_count << "," << static_cast<int>(total_epochs)
+			benchmark_string_stream << average_execution_time << "," << execution_type << "," << current_thread_count << "," << benchmark_individual_count << ","
+				<< location_count << "," << edge_count << "," << static_cast<int>(total_epochs)
 				<< "," << 1 << "," << benchmark_repeat_count << std::endl;
 		}
 	}
