@@ -1,5 +1,7 @@
 #include <omp.h>
+#include <ctime>
 #include <iostream>
+#include <sstream>
 #include "Individual.h"
 #include "GraphHandler.h"
 #include "Settings.h"
@@ -166,6 +168,96 @@ void reset_input(string filename, int individual_count, int& location_count, int
 	for (int i = 0; i < INITIAL_INFECTED_COUNT; ++i) {
 		individuals[i].infect();
 	}
+}
+
+void benchmark() {
+
+	// Get the default simulation values
+	int thread_count = DEFAULT_NUMBER_OF_THREADS;
+	int individual_count = DEFAULT_INDIVIDUAL_COUNT;
+	std::uint8_t total_epochs = DEFAULT_TOTAL_EPOCHS;
+	std::uint8_t repeat_count = DEFAULT_REPEAT_COUNT;
+	string input_graph_filename = "antwerp.edges"; // Read locations from the full Antwerp graph or from a minimal version (500 nodes)
+
+	// Benchmark settings
+	int benchmark_init_thread_count = 1;
+	int benchmark_max_thread_count = 4;
+	size_t benchmark_repeat_count = 1;
+	size_t benchmark_init_individual_count = 10;
+	size_t benchmark_individual_count_multiplier = 10;
+	size_t benchmark_max_individual_count = 1000 * 1000;
+	std::string execution_type = "serial";
+	
+	//individual_count *= 10;
+	individual_count = 100000; // population of Antwerp is 503138
+	total_epochs = 30; // 30 days
+	thread_count = 4;
+	repeat_count = 1;
+
+	// Set the thread count
+	omp_set_num_threads(thread_count);
+
+	// Print calculation info
+	std::cout << "----- Benchmark Infectious Diease Modelling -----" << std::endl;
+	
+	std::time_t timer = std::time(nullptr);
+	std::string benchmark_file_name = "benchmark_ " + std::string(std::asctime(std::localtime(&timer))) + " .csv";
+	std::stringstream benchmark_string_stream;
+	benchmark_string_stream << "execution_time,execution_type,thread_count,particle_count,total_timesteps,timestep,repeat_count" << std::endl;
+	
+	std::cout << "Running..." << std::flush;
+
+	LocationUndirectedGraph individual_graph; //Graph of location nodes & connections
+	int location_count, edge_count;
+	vector<Individual> individuals; // Population of healthy individuals
+	vector<std::tuple<int, int, int>> epoch_statistics;
+
+	// Reset individuals
+	reset_input(input_graph_filename, individual_count, location_count, edge_count, individual_graph, individuals);
+	std::cout << "Location Count: " << location_count << std::endl; // print info once
+	std::cout << "Edge Count: " << edge_count << std::endl; // print info once
+
+	double time_start, time_end, total_time, average_execution_time;
+
+	// Serial
+	cout << endl << "Running serial...";
+	
+	for (size_t benchmark_individual_count = benchmark_init_individual_count; benchmark_individual_count <= benchmark_max_individual_count;
+		benchmark_individual_count *= benchmark_individual_count_multiplier) {
+
+		total_time = 0.0;
+		average_execution_time = 0.0;
+		for (std::uint8_t current_repeat = 0; current_repeat != repeat_count; ++current_repeat) {
+			reset_input(input_graph_filename, individual_count, location_count, edge_count, individual_graph, individuals); // Reset individuals
+			time_start = omp_get_wtime();
+			simulate_serial(individual_count, total_epochs, individual_graph, individuals);
+			time_end = omp_get_wtime() - time_start;
+			total_time += time_end;
+			cout << "." << flush;
+		}
+		average_execution_time = (total_time / repeat_count) * 1000.0;
+
+		benchmark_string_stream << average_execution_time << "," << execution_type << "," 
+			<< thread_count << "," << benchmark_individual_count << "," << total_epochs 
+			<< "," << 1 << "," << benchmark_repeat_count << std::endl;
+	}
+
+	// OpenMP
+	cout << endl << "Running with OpenMP...";
+	total_time = 0.0;
+	for (std::uint8_t current_repeat = 0; current_repeat != repeat_count; ++current_repeat) {
+		reset_input(input_graph_filename, individual_count, location_count, edge_count, individual_graph, individuals); // Reset individuals
+		time_start = omp_get_wtime();
+		simulate_parallel(individual_count, total_epochs, individual_graph, individuals, epoch_statistics);
+		time_end = omp_get_wtime() - time_start;
+		total_time += time_end;
+		if (!GraphHandler::assert_epidemic_results(individual_count, epoch_statistics))
+			cout << "Error." << endl;
+		cout << "." << flush;
+	}
+	cout << (total_time / repeat_count) * 1000.0 << " ms" << endl;
+
+	system("pause");
 }
 
 int main() {
