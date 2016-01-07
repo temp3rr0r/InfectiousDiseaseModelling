@@ -10,6 +10,75 @@
 using namespace std;
 using namespace boost;
 
+void simulate_serial2(int individual_count, std::uint8_t total_epochs, const LocationUndirectedGraph& individual_graph,
+	vector<Individual>& individuals, vector<std::tuple<int, int, int>>& epoch_statistics) {
+
+	int index = 0;
+	int max_index = static_cast<int>(individuals.size());
+	int chunk = static_cast<int>(max_index / DEFAULT_NUMBER_OF_THREADS);
+
+	// Generate a look up map with the neighbouring nodes for each graph node
+	map<int, vector<int>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
+
+	// Repeat for all the epochs
+	for (std::uint8_t current_epoch = 0; current_epoch < (total_epochs + 1); ++current_epoch) {
+
+		//	Randomly move all individuals
+		for (index = 0; index < max_index; ++index) {
+
+			int current_location = individuals[index].get_location(); // Thread local variable
+			vector<int> neighborhood = neighborhood_lookup_map[current_location]; // Thread local variable, get the location's neighbourhood
+			individuals[index].move(neighborhood); // Stay in the same spot or move to a neighbouring node
+		}
+
+		// Try to infect individuals that are close to infected ones
+		// Since we only change individuals that are "chunked" by index for each thread, there is no need for critical/atomic region
+
+		for (index = 0; index < max_index; ++index) {
+			if (!individuals[index].is_infected()) { // Don't copy the shared memory element, just check a boolean
+				int affecting_index;
+				for (affecting_index = 0; affecting_index < individual_count; ++affecting_index) {
+
+					if (individuals[affecting_index].is_infected()) { // First do the binary check, then do the comparison because it is faster
+						if (individuals[index].get_location() == individuals[affecting_index].get_location()) { // Now do the "expensive" comparison
+							individuals[index].try_infect();
+							if (individuals[index].is_infected()) { // Don't save to shared memory if the invidual wasn't eventually infected
+								break; // No need to find other infected individuals in the same location, move the the next one
+							}
+						}
+					}
+				}
+			}
+		}
+
+		// Advance the epoch for every individual and gather infected & hit statistics
+		int hit_count = 0;
+		int infected_count = 0;
+		int recovered_count = 0;
+	// Since we only change individuals that are "chunked" by index for each thread, there is no need for critical/atomic region
+
+		for (index = 0; index < max_index; ++index) {
+			individuals[index].advance_epoch();	// Check individuals for the number of epochs they're infected and tag them as healed and recovered if a threshold disease_duration is passed					
+			// Near the end of the parallel region, perform reduction. Gather statistics about the current advance_epoch : what is the fraction of infected and hit individual
+			if (individuals[index].is_infected())
+				++infected_count;
+			if (individuals[index].is_hit())
+				++hit_count;
+			if (individuals[index].is_recovered())
+				++recovered_count;
+		}
+
+		epoch_statistics.push_back(std::make_tuple(hit_count, infected_count, recovered_count)); // Store tuple of statistics for the current epoch
+	}
+
+	if (SAVE_CSV)
+		GraphHandler::save_epoch_statistics_to_csv("output.csv", epoch_statistics);
+	if (SAVE_GRAPHVIZ)
+		GraphHandler::save_undirected_graph_to_graphviz_file("individualGraph.dot", individual_graph);
+	if (SHOW_EPIDEMIC_RESULTS)
+		GraphHandler::show_epidemic_results(individual_count, epoch_statistics);
+}
+
 void simulate_parallel(int individual_count, std::uint8_t total_epochs, const LocationUndirectedGraph& individual_graph,
 	vector<Individual>& individuals, vector<std::tuple<int, int, int>>& epoch_statistics) {
 
@@ -184,11 +253,11 @@ void benchmark() {
 	int benchmark_init_thread_count = 1;
 	int benchmark_max_thread_count = 4;
 	size_t benchmark_repeat_count = 1; // 10
-	size_t benchmark_init_individual_count = 1000; // 1000;
+	size_t benchmark_init_individual_count = 100000; // 1000;
 	size_t benchmark_individual_count_multiplier = 10;
-	size_t benchmark_max_individual_count = 10000; // 100000; // population of Antwerp is 503138
+	size_t benchmark_max_individual_count = 100000; // 100000; // population of Antwerp is 503138
 	std::string execution_type = "serial";	
-	total_epochs = 7; // 30 days
+	total_epochs = 30; // 30 days
 
 	// Set the thread count
 	omp_set_num_threads(benchmark_init_thread_count);
@@ -224,7 +293,7 @@ void benchmark() {
 		for (std::uint8_t current_repeat = 0; current_repeat != benchmark_repeat_count; ++current_repeat) {
 			reset_input(input_graph_filename, benchmark_individual_count, location_count, edge_count, individual_graph, individuals); // Reset individuals
 			time_start = omp_get_wtime();
-			simulate_serial(benchmark_individual_count, total_epochs, individual_graph, individuals);
+			simulate_serial2(benchmark_individual_count, total_epochs, individual_graph, individuals, epoch_statistics);
 			time_end = omp_get_wtime() - time_start;
 			total_time += time_end;
 			cout << "." << flush;
@@ -237,37 +306,37 @@ void benchmark() {
 	}
 
 	// OpenMP
-	cout << endl << "Running with OpenMP...";
-	execution_type = "openmp";
-
-	for (size_t benchmark_individual_count = benchmark_init_individual_count; benchmark_individual_count <= benchmark_max_individual_count;
-		benchmark_individual_count *= benchmark_individual_count_multiplier) {
-
-		for (int current_thread_count = benchmark_init_thread_count; current_thread_count <= benchmark_max_thread_count; current_thread_count++) {
-
-			// Set the thread count
-			omp_set_num_threads(current_thread_count);
-
-			total_time = 0.0;
-			average_execution_time = 0.0;
-			for (std::uint8_t current_repeat = 0; current_repeat != benchmark_repeat_count; ++current_repeat) {
-				reset_input(input_graph_filename, benchmark_individual_count, location_count, edge_count, individual_graph, individuals); // Reset individuals
-				time_start = omp_get_wtime();
-				simulate_parallel(benchmark_individual_count, total_epochs, individual_graph, individuals, epoch_statistics);
-				time_end = omp_get_wtime() - time_start;
-				total_time += time_end;
-				if (!GraphHandler::assert_epidemic_results(benchmark_individual_count, epoch_statistics))
-					cout << "Error." << endl << std::flush;
-				cout << "." << flush;
-			}
-
-			average_execution_time = (total_time / benchmark_repeat_count) * 1000.0;
-
-			benchmark_string_stream << average_execution_time << "," << execution_type << "," << current_thread_count << "," << benchmark_individual_count << ","
-				<< location_count << "," << edge_count << "," << static_cast<int>(total_epochs)
-				<< "," << 1 << "," << benchmark_repeat_count << std::endl;
-		}
-	}
+//	cout << endl << "Running with OpenMP...";
+//	execution_type = "openmp";
+//
+//	for (size_t benchmark_individual_count = benchmark_init_individual_count; benchmark_individual_count <= benchmark_max_individual_count;
+//		benchmark_individual_count *= benchmark_individual_count_multiplier) {
+//
+//		for (int current_thread_count = benchmark_init_thread_count; current_thread_count <= benchmark_max_thread_count; current_thread_count++) {
+//
+//			// Set the thread count
+//			omp_set_num_threads(current_thread_count);
+//
+//			total_time = 0.0;
+//			average_execution_time = 0.0;
+//			for (std::uint8_t current_repeat = 0; current_repeat != benchmark_repeat_count; ++current_repeat) {
+//				reset_input(input_graph_filename, benchmark_individual_count, location_count, edge_count, individual_graph, individuals); // Reset individuals
+//				time_start = omp_get_wtime();
+//				simulate_parallel(benchmark_individual_count, total_epochs, individual_graph, individuals, epoch_statistics);
+//				time_end = omp_get_wtime() - time_start;
+//				total_time += time_end;
+//				if (!GraphHandler::assert_epidemic_results(benchmark_individual_count, epoch_statistics))
+//					cout << "Error." << endl << std::flush;
+//				cout << "." << flush;
+//			}
+//
+//			average_execution_time = (total_time / benchmark_repeat_count) * 1000.0;
+//
+//			benchmark_string_stream << average_execution_time << "," << execution_type << "," << current_thread_count << "," << benchmark_individual_count << ","
+//				<< location_count << "," << edge_count << "," << static_cast<int>(total_epochs)
+//				<< "," << 1 << "," << benchmark_repeat_count << std::endl;
+//		}
+//	}
 
 	std::cout << std::endl << "Writing results to csv: " << benchmark_file_name << endl;
 
