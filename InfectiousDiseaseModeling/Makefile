@@ -1,5 +1,5 @@
 all:
-	$(CXX) InfectiousDiseaseModelingLinux.cpp -O3 -o diseasemodeling -std=c++11 -fopenmp
+	$(CXX) InfectiousDiseaseModeling.cpp -O3 -o diseasemodeling -std=c++11 -fopenmp
 run:
 	./diseasemodeling
 clean:

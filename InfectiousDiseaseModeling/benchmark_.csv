@@ -1,5 +1,0 @@
-execution_time,execution_type,thread_count,individual_count,node_count,edge_count,total_epochs,epoch_timestep,repeat_count
-1.01414e+07,openmp,1,503138,152506,170294,30,1,1
-6.17857e+06,openmp,2,503138,152506,170294,30,1,1
-5.17666e+06,openmp,3,503138,152506,170294,30,1,1
-4.13226e+06,openmp,4,503138,152506,170294,30,1,1

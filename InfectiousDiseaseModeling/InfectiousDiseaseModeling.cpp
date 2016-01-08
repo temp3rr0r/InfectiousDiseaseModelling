@@ -3,7 +3,9 @@
 #include <iostream>
 #include <sstream>
 #include "Individual.h"
+#include "Individual.cpp"
 #include "GraphHandler.h"
+#include "GraphHandler.cpp"
 #include "Settings.h"
 #include <fstream>
 
@@ -348,11 +350,10 @@ void benchmark() {
 	output_benchmark_csv.close();
 
 	std::cout << "Done!" << std::endl;
-
-	system("pause");
 }
 
-int main() {
+// Application entry point
+int main(int argc, char * argv[]) {
 
 	bool do_benchmark = false;
 
@@ -368,6 +369,7 @@ int main() {
 		std::uint8_t repeat_count = DEFAULT_REPEAT_COUNT;
 		string input_graph_filename = "antwerp.edges";//"minimumantwerp.edges"; // Read locations from the full Antwerp graph or from a minimal version (500 nodes)
 
+
 		//individual_count *= 10;
 		individual_count = 1000; // population of Antwerp is 503138
 		//total_epochs *= 5;
@@ -375,6 +377,57 @@ int main() {
 		thread_count = 4;
 		//repeat_count *= 4;
 		repeat_count = 1;
+		
+		if (argc > 7 || argc % 2 == 0) {
+			std::cout << "USAGE:\n" + string(argv[0]) + "\n" 
+				<< "OPTIONS:\n --individuals x\n --totalepochs x\n --threads x\n --help\n"
+				<< "EXAMPLES:" << std::endl
+				<< string(argv[0]) << " --threads 2" << std::endl
+				<< string(argv[0]) << " --threads 1" << " --individuals 100" << std::endl
+				<< string(argv[0]) << " --threads 4" << " --individuals 1000" 
+				<< " --totalepochs 60" << std::endl;
+			return 1;
+		}
+		
+		if (argc > 1) {
+			for (int i = 1; i < argc; i+=2) {
+				if (argc >= i + 1) {
+					std::string variable = argv[i];
+					std::string value = argv[i + 1];
+					
+					if (variable.compare("--individuals") == 0) {
+						individual_count = std::stoi(value);
+					}
+					else if (variable.compare("--totalepochs") == 0) {
+						total_epochs = std::stoi(value);
+					}
+					else if (variable.compare("--threads") == 0) {
+						thread_count = std::stoi(value);
+					}
+					else {
+						std::cout << variable << ": unknown variable" << endl;
+						return 1;
+					}
+				}		
+			}
+			
+			// Check input ranges
+			if (individual_count > 1000 * 1000 || individual_count < 50) {
+				individual_count = DEFAULT_INDIVIDUAL_COUNT;
+				std::cout << "--individuals must be more than 49 and less than 1.000.000" << std::endl;
+				return 1;
+			}
+			if (total_epochs > 1000 || total_epochs < 1) {
+				total_epochs = DEFAULT_TOTAL_EPOCHS;
+				std::cout << "--totalepochs must be more than 0 and less than 1.000" << std::endl;
+				return 1;
+			}
+			if (thread_count > 100 || thread_count < 1) {
+				thread_count = DEFAULT_NUMBER_OF_THREADS;
+				std::cout << "--threads must be more than 0 and less than 100" << std::endl;
+				return 1;
+			}
+		}
 
 		// Set the thread count
 		omp_set_num_threads(thread_count);
@@ -426,7 +479,5 @@ int main() {
 			cout << ".";
 		}
 		cout << (total_time / repeat_count) * 1000.0 << " ms" << endl;
-
-		system("pause");
 	}
 }
