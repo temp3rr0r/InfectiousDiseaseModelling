@@ -359,7 +359,7 @@ int main(int argc, char * argv[]) {
 		std::uint8_t total_epochs = DEFAULT_TOTAL_EPOCHS;
 		std::uint8_t repeat_count = DEFAULT_REPEAT_COUNT;
 		string input_graph_filename = "antwerp.edges";//"minimumantwerp.edges"; // Read locations from the full Antwerp graph or from a minimal version (500 nodes)
-
+		bool save_to_csv = SAVE_CSV;
 
 		//individual_count *= 10;
 		individual_count = 1000; // population of Antwerp is 503138
@@ -368,15 +368,16 @@ int main(int argc, char * argv[]) {
 		thread_count = 4;
 		//repeat_count *= 4;
 		repeat_count = 1;
+		save_to_csv = false;
 		
-		if (argc > 7 || argc % 2 == 0) {
+		if (argc > 9 || argc % 2 == 0) {
 			std::cout << "USAGE:\n" + string(argv[0]) + "\n" 
-				<< "OPTIONS:\n --individuals x\n --totalepochs x\n --threads x\n --help\n"
+				<< "OPTIONS:\n --individuals x\n --totalepochs x\n --threads x\n --csv 0/1\n --help\n"
 				<< "EXAMPLES:" << std::endl
 				<< string(argv[0]) << " --threads 2" << std::endl
 				<< string(argv[0]) << " --threads 1" << " --individuals 100" << std::endl
 				<< string(argv[0]) << " --threads 4" << " --individuals 1000" 
-				<< " --totalepochs 60" << std::endl;
+				<< " --totalepochs 60" << " -- csv 1" << std::endl;
 			return 1;
 		}
 		
@@ -394,6 +395,9 @@ int main(int argc, char * argv[]) {
 					}
 					else if (variable.compare("--threads") == 0) {
 						thread_count = std::stoi(value);
+					}
+					else if (variable.compare("--csv") == 0) {
+						save_to_csv = std::stoi(value);
 					}
 					else {
 						std::cout << variable << ": unknown variable" << endl;
@@ -470,5 +474,10 @@ int main(int argc, char * argv[]) {
 			cout << ".";
 		}
 		cout << (total_time / repeat_count) * 1000.0 << " ms" << endl;
+		
+		if (save_to_csv) {			
+			std::cout << std::endl << "Writing results to csv: " << "output.csv" << endl;
+			GraphHandler::save_epoch_statistics_to_csv("output.csv", epoch_statistics);
+		}
 	}
 }
