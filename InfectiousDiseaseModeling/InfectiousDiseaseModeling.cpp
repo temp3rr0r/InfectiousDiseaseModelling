@@ -99,13 +99,9 @@ void simulate_parallel(int individual_count, std::uint8_t total_epochs, const Lo
 		{
 			#pragma omp for schedule(static, chunk) nowait
 			for (index = 0; index < max_index; ++index) {
-
-				Individual current_individual = individuals[index]; // Thread local variable
-				int current_location = current_individual.get_location(); // Thread local variable
+				int current_location = individuals[index].get_location(); // Thread local variable
 				vector<int> neighborhood = neighborhood_lookup_map[current_location]; // Thread local variable, get the location's neighbourhood
-				current_individual.move(neighborhood); // Stay in the same spot or move to a neighbouring node
-
-				individuals[index] = current_individual; // Save individual back to the shared memory space
+				individuals[index].move(neighborhood); // Stay in the same spot or move to a neighbouring node
 			}
 		} // Implicit Barrier
 			
@@ -113,26 +109,23 @@ void simulate_parallel(int individual_count, std::uint8_t total_epochs, const Lo
 		#pragma omp parallel private(index) shared(individuals) firstprivate(chunk, max_index)
 		{
 			// Since we only change individuals that are "chunked" by index for each thread, there is no need for critical/atomic region
-			#pragma omp for schedule(auto) nowait
+			#pragma omp for schedule(auto) nowait			
 			for (index = 0; index < max_index; ++index) {
 				if (!individuals[index].is_infected()) { // Don't copy the shared memory element, just check a boolean
-					Individual current_individual = individuals[index]; // Thread local variable
 					int affecting_index;
 					for (affecting_index = 0; affecting_index < individual_count; ++affecting_index) {
 
 						if (individuals[affecting_index].is_infected()) { // First do the binary check, then do the comparison because it is faster
-							Individual affecting_individual = individuals[affecting_index]; // Thread local variable
-							if (current_individual.get_location() == affecting_individual.get_location()) { // Now do the "expensive" comparison
-								current_individual.try_infect();
-								if (current_individual.is_infected()) { // Don't save to shared memory if the invidual wasn't eventually infected
-									individuals[index] = current_individual; // Save affecting individual back to the shared memory space
+							if (individuals[index].get_location() == individuals[affecting_index].get_location()) { // Now do the "expensive" comparison
+								individuals[index].try_infect();
+								if (individuals[index].is_infected()) { // Don't save to shared memory if the invidual wasn't eventually infected
 									break; // No need to find other infected individuals in the same location, move the the next one
 								}
 							}
 						}
 					}
 				}
-			}
+			}		
 
 		} // Implicit Barrier
 
@@ -143,19 +136,17 @@ void simulate_parallel(int individual_count, std::uint8_t total_epochs, const Lo
 		#pragma omp parallel private(index) shared(individuals) firstprivate(chunk, max_index) reduction(+:infected_count, hit_count, recovered_count)
 		{
 			// Since we only change individuals that are "chunked" by index for each thread, there is no need for critical/atomic region
-			#pragma omp for schedule(static, chunk) nowait
-			for (index = 0; index < max_index; ++index) {		
-				Individual current_individual = individuals[index]; // Thread local variable
-				current_individual.advance_epoch();	// Check individuals for the number of epochs they're infected and tag them as healed and recovered if a threshold disease_duration is passed					
-				individuals[index] = current_individual; // Save individual back to the shared memory space
+			#pragma omp for schedule(static, chunk) nowait			
+			for (index = 0; index < max_index; ++index) {
+				individuals[index].advance_epoch();	// Check individuals for the number of epochs they're infected and tag them as healed and recovered if a threshold disease_duration is passed					
 				// Near the end of the parallel region, perform reduction. Gather statistics about the current advance_epoch : what is the fraction of infected and hit individual
-				if (current_individual.is_infected())
+				if (individuals[index].is_infected())
 					++infected_count;
-				if (current_individual.is_hit())
+				if (individuals[index].is_hit())
 					++hit_count;
-				if (current_individual.is_recovered())
+				if (individuals[index].is_recovered())
 					++recovered_count;
-			}
+			}			
 		} // Implicit Barrier
 
 		epoch_statistics.push_back(std::make_tuple(hit_count, infected_count, recovered_count)); // Store tuple of statistics for the current epoch
