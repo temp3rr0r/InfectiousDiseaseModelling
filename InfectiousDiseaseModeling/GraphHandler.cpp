@@ -6,9 +6,9 @@
 #include "GraphHandler.h"
 
 // Scan the location graph and return a map that binds every location with a vector of neighbouring locations
-std::map<int, std::vector<int>> GraphHandler::get_node_neighborhood_lookup_map(const LocationUndirectedGraph& location_graph) {
+std::unordered_map<int, std::vector<int>> GraphHandler::get_node_neighborhood_lookup_map(const LocationUndirectedGraph& location_graph) {
 	
-	std::map<int, std::vector<int>> returning_neighborhood_lookup_map;
+	std::unordered_map<int, std::vector<int>> returning_neighborhood_lookup_map;
 
 	LocationUndirectedGraph::vertex_iterator vertex_iterator_start, vertex_iterator_end; // Location node iterators
 	std::tie(vertex_iterator_start, vertex_iterator_end) = vertices(location_graph); // Tie iterators with the current graph
@@ -65,7 +65,7 @@ LocationUndirectedGraph GraphHandler::get_location_undirected_graph_from_file(st
 	// We use size_t because the input file has values much larger than uint32_t for each location
 	// and int for the second part of the map because the distinct location count is small and the boost:undirected graph
 	// accepts location indices of type int
-	map<size_t, int> map_location_to_index;
+	std::unordered_map<size_t, int> map_location_to_index;
 	int current_location_index = 0;
 
 	while (getline(input_file_stream, current_line)) {

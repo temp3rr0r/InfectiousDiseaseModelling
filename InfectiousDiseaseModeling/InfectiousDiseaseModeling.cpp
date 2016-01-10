@@ -20,7 +20,7 @@ void simulate_serial(int individual_count, std::uint8_t total_epochs, const Loca
 	int chunk = static_cast<int>(max_index / DEFAULT_NUMBER_OF_THREADS);
 
 	// Generate a look up map with the neighbouring nodes for each graph node
-	map<int, vector<int>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
+	std::unordered_map<int, vector<int>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
 
 	// Repeat for all the epochs
 	for (std::uint8_t current_epoch = 0; current_epoch < (total_epochs + 1); ++current_epoch) {
@@ -89,7 +89,7 @@ void simulate_parallel(int individual_count, std::uint8_t total_epochs, const Lo
 	int chunk = static_cast<int>(max_index / DEFAULT_NUMBER_OF_THREADS);
 
 	// Generate a look up map with the neighbouring nodes for each graph node
-	map<int, vector<int>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
+	std::unordered_map<int, vector<int>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
 
 	// Repeat for all the epochs
 	for (std::uint8_t current_epoch = 0; current_epoch < (total_epochs + 1); ++current_epoch) {
@@ -166,7 +166,7 @@ void simulate_serial_naive(int individual_count, int total_epochs, const Locatio
 	vector<std::tuple<int, int, int>> epoch_statistics;
 	
 	// Generate a look up map with the neighbouring nodes for each graph node
-	map<int, vector<int>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
+	std::unordered_map<int, vector<int>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
 
 	// Repeat for all the epochs
 	for (int current_epoch = 0; current_epoch < (total_epochs + 1); ++current_epoch) {
