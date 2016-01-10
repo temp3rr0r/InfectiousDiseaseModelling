@@ -1,5 +1,5 @@
 #pragma once
-#include <map>
+#include <unordered_map>
 #include <vector>
 #include "Settings.h"
 #include "Individual.h"
@@ -9,7 +9,7 @@
 // generate lookup map for graph node neighborhoods
 class GraphHandler {
 public:
-	static std::map<int, std::vector<int>> get_node_neighborhood_lookup_map(const LocationUndirectedGraph& location_graph);
+	static std::unordered_map<int, std::vector<int>> get_node_neighborhood_lookup_map(const LocationUndirectedGraph& location_graph);
 	static std::vector<Individual> get_random_individuals(int individual_count, int location_count);
 	static LocationUndirectedGraph get_location_undirected_graph_from_file(std::string filename);
 	static LocationUndirectedGraph get_sample_location_undirected_graph();
