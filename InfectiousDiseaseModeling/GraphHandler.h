@@ -1,5 +1,4 @@
 #pragma once
-#include <unordered_map>
 #include <vector>
 #include "Settings.h"
 #include "Individual.h"
@@ -10,6 +9,7 @@
 class GraphHandler {
 public:
 	static boost::unordered_map<int, std::vector<int>> get_node_neighborhood_lookup_map(const LocationUndirectedGraph& location_graph);
+	static std::vector<std::vector<int>> get_node_neighborhood_lookup_vector(const LocationUndirectedGraph& location_graph);
 	static std::vector<Individual> get_random_individuals(int individual_count, int location_count);
 	static LocationUndirectedGraph get_location_undirected_graph_from_file(std::string filename);
 	static LocationUndirectedGraph get_sample_location_undirected_graph();

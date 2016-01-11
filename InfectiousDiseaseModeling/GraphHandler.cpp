@@ -27,6 +27,28 @@ boost::unordered_map<int, std::vector<int>> GraphHandler::get_node_neighborhood_
 	return returning_neighborhood_lookup_map;
 }
 
+std::vector<std::vector<int>> GraphHandler::get_node_neighborhood_lookup_vector(const LocationUndirectedGraph& location_graph) {
+	
+	std::vector<std::vector<int>> returning_neighborhood_lookup_map;
+	returning_neighborhood_lookup_map.reserve(location_graph.m_vertices.size());
+
+	LocationUndirectedGraph::vertex_iterator vertex_iterator_start, vertex_iterator_end; // Location node iterators
+	std::tie(vertex_iterator_start, vertex_iterator_end) = vertices(location_graph); // Tie iterators with the current graph
+
+	LocationUndirectedGraph::adjacency_iterator neighbour_iterator_start, neighbour_iterator_end; // Neighbouring node iterators
+	for (; vertex_iterator_start != vertex_iterator_end; ++vertex_iterator_start) {
+
+		tie(neighbour_iterator_start, neighbour_iterator_end) = adjacent_vertices(*vertex_iterator_start, location_graph); // Tie adjacent/neighbouring location nodes
+		std::vector<int> current_neighborhood;
+		for (; neighbour_iterator_start != neighbour_iterator_end; ++neighbour_iterator_start)
+			current_neighborhood.push_back(*neighbour_iterator_start); // Add the current neighbour
+
+		returning_neighborhood_lookup_map[static_cast<int>(*vertex_iterator_start)] = current_neighborhood;
+	}
+
+	return returning_neighborhood_lookup_map;
+}
+
 // Generate a vector of individuals and assign a random location within the requested ranges
 std::vector<Individual> GraphHandler::get_random_individuals(int individual_count, int location_count) {
 

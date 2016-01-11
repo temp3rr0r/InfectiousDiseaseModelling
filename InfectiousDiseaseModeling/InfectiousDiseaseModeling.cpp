@@ -17,8 +17,9 @@ void simulate_serial(int individual_count, std::uint8_t total_epochs, const Loca
 	int max_index = static_cast<int>(individuals.size());
 	int chunk = static_cast<int>(max_index / DEFAULT_NUMBER_OF_THREADS);
 
-	// Generate a look up std::unorderd_map with the neighbouring nodes for each graph node
-	boost::unordered_map<int, vector<int>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
+	// Generate a look up std::unordered_map with the neighbouring nodes for each graph node
+	//boost::unordered_map<int, vector<int>> neighborhood_lookup_map = GraphHandler::get_node_neighborhood_lookup_map(individual_graph);
+	vector<vector<int>> neighborhood_lookup_vector = GraphHandler::get_node_neighborhood_lookup_vector(individual_graph);
 
 	// Repeat for all the epochs
 	for (std::uint8_t current_epoch = 0; current_epoch < (total_epochs + 1); ++current_epoch) {
@@ -27,7 +28,8 @@ void simulate_serial(int individual_count, std::uint8_t total_epochs, const Loca
 		for (index = 0; index < max_index; ++index) {
 
 			int current_location = individuals[index].get_location(); // Thread local variable
-			vector<int> neighborhood = neighborhood_lookup_map[current_location]; // Thread local variable, get the location's neighbourhood
+			//vector<int> neighborhood = neighborhood_lookup_map[current_location]; // Thread local variable, get the location's neighbourhood
+			vector<int> neighborhood = neighborhood_lookup_vector[current_location]; // Thread local variable, get the location's neighbourhood
 			individuals[index].move(neighborhood); // Stay in the same spot or move to a neighbouring node
 		}
 
@@ -369,7 +371,7 @@ int main() {
 		string input_graph_filename = "antwerp.edges";//"minimumantwerp.edges"; // Read locations from the full Antwerp graph or from a minimal version (500 nodes)
 
 		//individual_count *= 10;
-		individual_count = 1000; // population of Antwerp is 503138
+		individual_count = 10000; // population of Antwerp is 503138
 		//total_epochs *= 5;
 		total_epochs = 30; // 30 days
 		thread_count = 4;
