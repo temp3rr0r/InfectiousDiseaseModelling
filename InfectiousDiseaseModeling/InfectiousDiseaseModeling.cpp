@@ -371,7 +371,7 @@ int main() {
 		string input_graph_filename = "antwerp.edges";//"minimumantwerp.edges"; // Read locations from the full Antwerp graph or from a minimal version (500 nodes)
 
 		//individual_count *= 10;
-		individual_count = 10000; // population of Antwerp is 503138
+		individual_count = 1000; // population of Antwerp is 503138
 		//total_epochs *= 5;
 		total_epochs = 30; // 30 days
 		thread_count = 4;

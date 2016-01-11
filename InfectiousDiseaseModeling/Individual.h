@@ -4,7 +4,7 @@
 
 // Individual represents one person that can be infected, healed, infect others and move to other graph node locations
 class Individual {
-public:		
+public:
 	Individual() : infected_(false), hit_(false), recovered_(), epochs_infected_(0), location_(0) { } // Default constructor
 	Individual(bool infected, bool hit, bool recovered, std::uint8_t days_infected, int location) // Full constructor
 		: infected_(infected), hit_(hit), recovered_(recovered), epochs_infected_(days_infected), location_(location) { }
@@ -25,6 +25,8 @@ private:
 	std::uint8_t epochs_infected_;
 	int location_; // Refers to the graph node that represents the current location of the individual
 	IndividualParameters parameters_;
+	static float get_random_infect_chance();
+	static int get_random_location(size_t neighbours_size);
 };
 
 // Infect the individual
