@@ -14,17 +14,18 @@ Write code in C/C++ and use OpenMP for parallelization.
 ###Implementation
 Three versions of the source code where created:
 
-1. Serial Naive"  Undirected Acyclic Graph algorithm, utilizing map look-up tables, native C++ 11, using STD, STL and Boost Graph library[4].
+1. Serial Naive:  Undirected Acyclic Graph algorithm, utilizing map look-up tables, native C++ 11, using STD, STL and *Boost Graph library*[4].
 2. Serial:   Undirected  Acyclic  Graph  algorithm,  utilizing  map  look-up tables, native C++ 11, using STD, STL and Boost Graph library. Some algorithmic optimizations were applied:
-	- Breaking  an  inner for loop  that  was  comparing  if  a  susceptible individuals got infected individuals.
-	- Skipping iteration loops for individuals that are already infected.
-3. Parallel:  Undirected  Acyclic  Graph  algorithm,  utlizing  map  look-up tables,  native C++  11, using  STD,  STL, Boost  Graph library and OpenMP  version  4.1 (most  of  the  features).   Also  the  optimizations mentioned above were applied.
+	- Breaking  an  *inner for-loop*  that  was  comparing  if  a  susceptible individuals got infected individuals.
+	- *Skipping iteration* loops for individuals that are already infected.
+3. Parallel:  Undirected  Acyclic  Graph  algorithm,  utlizing  map  look-up tables,  native C++  11, using  STD,  STL, Boost  Graph library and *OpenMP*  version  4.1 (most  of  the  features).   Also  the  optimizations mentioned above were applied.
 
 ### Documentation
-Documentation comparing the speed-up between the serial and parallel versions: 
+Documentation comparing the speed-up between the serial and parallel versions: https://onedrive.live.com/redir?resid=F3C315EB7F683B03!20269&authkey=!AG_HeLbTwupstY0&ithint=file%2cpdf
 
 ###References
-1. *Intel Developer zone - n-bodies: a parallel TBB solution: computing accelerations? or forces?* - https://software.intel.com/enus/blogs/2009/09/22/n-bodies-a-parallel-tbb-solution-computingaccelerations-or-forces
-2. *Wikipedia: Fast Inverse Square Root* - https://en.wikipedia.org/wiki/Fastinversesquareroot
-3. *Wikipedia: Barnes-Hut simulation* - https://en.wikipedia.org/wiki/BarnesHutsimulation
-4. *Tutorial: Scalable Memory Allocator* - https://www.threadingbuildingblocks.org/tutorial-intel-tbb-scalablememory-allocator
+1. Eubank et al., Modelling disease outbreaks in realistic ur- ban social networks, Nature 429, 180-184 (13 May 2004) - http://www.nature.com/nature/journal/v429/n6988/full/nature02541.html
+2. 32 OpenMP Traps For C++ Developers - http://www.viva64.com/en/a/0054/
+3. FIRSTPRIVATE Clause - https://computing.llnl.gov/tutorials/openMP/FIRSTPRIVATE
+4. Exploring the Boost Graph Library - http://www.ibm.com/developerworks/aix/library/au-aix-boost-graph/
+5. Learning the OpenMP framework with GCC - http://www.ibm.com/developerworks/aix/library/au-aix-openmp- framework/
