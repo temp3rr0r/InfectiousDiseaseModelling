@@ -1,4 +1,4 @@
-# Parallel N-Body Simulator#
+# Parallel computing: Infectious Disease Modeling with OpenMPr#
 
 Modeling the spread of infectious diseases with computer simulations is
 an important and useful step in learning how populations could respond to
@@ -24,8 +24,8 @@ Three versions of the source code where created:
 Documentation comparing the speed-up between the serial and parallel versions: https://onedrive.live.com/redir?resid=F3C315EB7F683B03!20269&authkey=!AG_HeLbTwupstY0&ithint=file%2cpdf
 
 ###References
-1. Eubank et al., Modelling disease outbreaks in realistic ur- ban social networks, Nature 429, 180-184 (13 May 2004) - http://www.nature.com/nature/journal/v429/n6988/full/nature02541.html
-2. 32 OpenMP Traps For C++ Developers - http://www.viva64.com/en/a/0054/
-3. FIRSTPRIVATE Clause - https://computing.llnl.gov/tutorials/openMP/FIRSTPRIVATE
-4. Exploring the Boost Graph Library - http://www.ibm.com/developerworks/aix/library/au-aix-boost-graph/
-5. Learning the OpenMP framework with GCC - http://www.ibm.com/developerworks/aix/library/au-aix-openmp- framework/
+1. Eubank et al., *Modelling disease outbreaks in realistic urban social networks*, Nature 429, 180-184 (13 May 2004) - http://www.nature.com/nature/journal/v429/n6988/full/nature02541.html
+2. *32 OpenMP Traps For C++ Developers* - http://www.viva64.com/en/a/0054/
+3. *FIRSTPRIVATE Clause* - https://computing.llnl.gov/tutorials/openMP/FIRSTPRIVATE
+4. *Exploring the Boost Graph Library* - http://www.ibm.com/developerworks/aix/library/au-aix-boost-graph/
+5. *Learning the OpenMP framework with GCC* - http://www.ibm.com/developerworks/aix/library/au-aix-openmp-framework/
