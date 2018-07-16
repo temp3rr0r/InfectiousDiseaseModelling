@@ -1,4 +1,4 @@
-# Parallel computing: Infectious Disease Modeling with OpenMP#
+# Parallel computing: Infectious Disease Modeling with OpenMP
 
 Modeling the spread of infectious diseases with computer simulations is
 an important and useful step in learning how populations could respond to
